@@ -24,7 +24,7 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
-  base: '/survey/',
+  base: process.env.VITE_BASE_PATH || '/',
   server: {
     host: true,
     allowedHosts: [
