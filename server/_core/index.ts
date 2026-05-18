@@ -9,6 +9,13 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { ensureDefaultLocalAdmin } from "./localAuth";
 
+const normalizeBasePath = (value: string | undefined) => {
+  const raw = (value || "/survey").trim();
+  if (!raw || raw === "/") return "";
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.endsWith("/") ? withLeading.slice(0, -1) : withLeading;
+};
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -30,6 +37,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   await ensureDefaultLocalAdmin();
+  const appBasePath = normalizeBasePath(process.env.APP_BASE_PATH);
 
   const app = express();
   const server = createServer(app);
@@ -37,10 +45,10 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /survey/api/oauth/callback
-  registerOAuthRoutes(app, "/survey/api");
+  registerOAuthRoutes(app, `${appBasePath}/api`);
   // tRPC API under /survey/api/trpc
   app.use(
-    "/survey/api/trpc",
+    `${appBasePath}/api/trpc`,
     createExpressMiddleware({
       router: appRouter,
       createContext,
@@ -48,9 +56,9 @@ async function startServer() {
   );
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    await setupVite(app, server, appBasePath);
   } else {
-    serveStatic(app);
+    serveStatic(app, appBasePath);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
