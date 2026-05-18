@@ -1,24 +1,38 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, boolean } from "drizzle-orm/mysql-core";
+import {
+  pgEnum,
+  pgTable,
+  integer,
+  text,
+  timestamp,
+  varchar,
+  numeric,
+  jsonb,
+  boolean,
+  serial,
+} from "drizzle-orm/pg-core";
+
+export const roleEnum = pgEnum("role", ["user", "admin", "surveyor", "supervisor"]);
+export const statusEnum = pgEnum("status", ["draft", "submitted", "approved", "returned"]);
 
 /**
  * Core user table backing auth flow.
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
-export const users = mysqlTable("users", {
+export const users = pgTable("users", {
   /**
    * Surrogate primary key. Auto-incremented numeric value managed by the database.
    * Use this for relations between tables.
    */
-  id: int("id").autoincrement().primaryKey(),
+  id: serial("id").primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin", "surveyor", "supervisor"]).default("user").notNull(),
+  role: roleEnum("role").default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -29,15 +43,15 @@ export type InsertUser = typeof users.$inferInsert;
  * Local credentials for standalone username/password authentication.
  * One credential row maps to exactly one user.
  */
-export const localAuthCredentials = mysqlTable("localAuthCredentials", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+export const localAuthCredentials = pgTable("localAuthCredentials", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
   username: varchar("username", { length: 100 }).notNull().unique(),
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
   salt: varchar("salt", { length: 64 }).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type LocalAuthCredential = typeof localAuthCredentials.$inferSelect;
@@ -46,8 +60,8 @@ export type InsertLocalAuthCredential = typeof localAuthCredentials.$inferInsert
 /**
  * Households table - stores basic household information
  */
-export const households = mysqlTable("households", {
-  id: int("id").autoincrement().primaryKey(),
+export const households = pgTable("households", {
+  id: serial("id").primaryKey(),
   
   // Location information
   barangay: varchar("barangay", { length: 255 }).notNull(),
@@ -56,15 +70,15 @@ export const households = mysqlTable("households", {
   
   // Head of family information
   headOfFamily: varchar("headOfFamily", { length: 255 }).notNull(),
-  age: int("age"),
+  age: integer("age"),
   civilStatus: varchar("civilStatus", { length: 100 }),
   occupation: varchar("occupation", { length: 255 }),
   education: varchar("education", { length: 255 }),
-  monthlyIncome: decimal("monthlyIncome", { precision: 10, scale: 2 }),
+  monthlyIncome: numeric("monthlyIncome", { precision: 10, scale: 2 }),
   
   // GPS coordinates
-  latitude: decimal("latitude", { precision: 10, scale: 7 }),
-  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  latitude: numeric("latitude", { precision: 10, scale: 7 }),
+  longitude: numeric("longitude", { precision: 10, scale: 7 }),
   
   // Program membership
   fourPsBeneficiary: boolean("fourPsBeneficiary").default(false),
@@ -74,20 +88,20 @@ export const households = mysqlTable("households", {
   indigenousPeople: boolean("indigenousPeople").default(false),
   
   // Survey metadata
-  surveyedBy: int("surveyedBy").references(() => users.id),
+  surveyedBy: integer("surveyedBy").references(() => users.id),
   surveyedAt: timestamp("surveyedAt").defaultNow().notNull(),
   verificationPhoto: text("verificationPhoto"), // S3 URL
   verificationPhotoKey: varchar("verificationPhotoKey", { length: 512 }), // S3 key
   
   // Status workflow
-  status: mysqlEnum("status", ["draft", "submitted", "approved", "returned"]).default("submitted").notNull(),
-  reviewedBy: int("reviewedBy").references(() => users.id),
+  status: statusEnum("status").default("submitted").notNull(),
+  reviewedBy: integer("reviewedBy").references(() => users.id),
   reviewedAt: timestamp("reviewedAt"),
   returnReason: text("returnReason"), // Reason for returning the survey
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Household = typeof households.$inferSelect;
@@ -96,12 +110,12 @@ export type InsertHousehold = typeof households.$inferInsert;
 /**
  * Survey responses table - stores detailed survey form data
  */
-export const surveyResponses = mysqlTable("surveyResponses", {
-  id: int("id").autoincrement().primaryKey(),
-  householdId: int("householdId").notNull().references(() => households.id, { onDelete: "cascade" }),
+export const surveyResponses = pgTable("surveyResponses", {
+  id: serial("id").primaryKey(),
+  householdId: integer("householdId").notNull().references(() => households.id, { onDelete: "cascade" }),
   
   // Section A: Household Identification
-  sectionA: json("sectionA").$type<{
+  sectionA: jsonb("sectionA").$type<{
     householdNumber?: string;
     dateOfInterview?: string;
     enumeratorName?: string;
@@ -115,7 +129,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section B: Household Roster
-  sectionB: json("sectionB").$type<{
+  sectionB: jsonb("sectionB").$type<{
     headBirthDate?: string;
     members?: Array<{
       name: string;
@@ -130,7 +144,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section C: Housing Characteristics
-  sectionC: json("sectionC").$type<{
+  sectionC: jsonb("sectionC").$type<{
     houseType?: string;           // dwelling type: concrete, semi-concrete, light materials, makeshift
     tenureStatus?: string;        // ownership: owned, rented, informal settler, shared, rent-free
     roofMaterial?: string;
@@ -143,7 +157,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section D: Income and Livelihood (kept for backward compatibility)
-  sectionD: json("sectionD").$type<{
+  sectionD: jsonb("sectionD").$type<{
     primaryIncomeSource?: string;
     monthlyIncome?: number;
     secondaryIncome?: string;
@@ -152,7 +166,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section E: Health and Nutrition
-  sectionE: json("sectionE").$type<{
+  sectionE: jsonb("sectionE").$type<{
     hasHealthInsurance?: boolean;       // any health insurance (PhilHealth, private, etc.)
     healthInsuranceType?: string;       // PhilHealth, private, HMO, none
     hasPhilHealth?: boolean;            // specifically PhilHealth coverage
@@ -175,7 +189,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section F: Education
-  sectionF: json("sectionF").$type<{
+  sectionF: jsonb("sectionF").$type<{
     childrenInSchool?: number;              // children 6-11 attending elementary
     childrenOutOfSchool?: number;           // children 6-11 NOT attending school (CBMS indicator)
     youthInSchool?: number;                 // youth 12-15 attending high school
@@ -187,7 +201,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section G: Social Protection
-  sectionG: json("sectionG").$type<{
+  sectionG: jsonb("sectionG").$type<{
     fourPsBeneficiary?: boolean;
     tupadBeneficiary?: boolean;
     magsakabataanRecipient?: boolean;
@@ -196,7 +210,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section H: Disaster Preparedness & Peace/Order
-  sectionH: json("sectionH").$type<{
+  sectionH: jsonb("sectionH").$type<{
     hasEmergencyKit?: boolean;
     hasEvacuationPlan?: boolean;            // household has a family evacuation plan (CBMS indicator)
     evacuationCenterAccessible?: boolean;   // knows/can access nearest evacuation center
@@ -213,7 +227,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section I: Agricultural Activities & Livelihood
-  sectionI: json("sectionI").$type<{
+  sectionI: jsonb("sectionI").$type<{
     hasAgriculturalLand?: boolean;          // owns or tills agricultural land (CBMS indicator)
     landArea?: number;                      // in hectares
     cropsPlanted?: string[];
@@ -226,7 +240,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section J: Access to Services
-  sectionJ: json("sectionJ").$type<{
+  sectionJ: jsonb("sectionJ").$type<{
     distanceToHealthCenter?: number;
     distanceToSchool?: number;
     distanceToMarket?: number;
@@ -234,7 +248,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   }>(),
   
   // Section K: Household Needs and Priorities
-  sectionK: json("sectionK").$type<{
+  sectionK: jsonb("sectionK").$type<{
     primaryNeeds?: string[];
     priorityPrograms?: string[];
     additionalComments?: string;
@@ -242,7 +256,7 @@ export const surveyResponses = mysqlTable("surveyResponses", {
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type SurveyResponse = typeof surveyResponses.$inferSelect;
@@ -251,16 +265,16 @@ export type InsertSurveyResponse = typeof surveyResponses.$inferInsert;
 /**
  * Custom report templates table - stores user-defined report configurations
  */
-export const reportTemplates = mysqlTable("reportTemplates", {
-  id: int("id").autoincrement().primaryKey(),
+export const reportTemplates = pgTable("reportTemplates", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   
   // Field selection - array of field names to include in the report
-  selectedFields: json("selectedFields").$type<string[]>().notNull(),
+  selectedFields: jsonb("selectedFields").$type<string[]>().notNull(),
   
   // Filter configuration
-  filters: json("filters").$type<{
+  filters: jsonb("filters").$type<{
     barangay?: string[];
     municipality?: string[];
     status?: string[];
@@ -278,11 +292,11 @@ export const reportTemplates = mysqlTable("reportTemplates", {
   }>(),
   
   // Created by user
-  createdBy: int("createdBy").references(() => users.id),
+  createdBy: integer("createdBy").references(() => users.id),
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type ReportTemplate = typeof reportTemplates.$inferSelect;
@@ -291,8 +305,8 @@ export type InsertReportTemplate = typeof reportTemplates.$inferInsert;
 /**
  * Custom export layouts table - stores user-defined export format configurations
  */
-export const exportLayouts = mysqlTable("exportLayouts", {
-  id: int("id").autoincrement().primaryKey(),
+export const exportLayouts = pgTable("exportLayouts", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   
@@ -300,7 +314,7 @@ export const exportLayouts = mysqlTable("exportLayouts", {
   layoutType: varchar("layoutType", { length: 50 }).notNull(),
   
   // Format preferences
-  preferences: json("preferences").$type<{
+  preferences: jsonb("preferences").$type<{
     includeCharts?: boolean;
     includeMetrics?: boolean;
     includeNarrative?: boolean;
@@ -314,11 +328,11 @@ export const exportLayouts = mysqlTable("exportLayouts", {
   }>(),
   
   // Created by user
-  createdBy: int("createdBy").references(() => users.id),
+  createdBy: integer("createdBy").references(() => users.id),
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type ExportLayout = typeof exportLayouts.$inferSelect;
@@ -327,8 +341,8 @@ export type InsertExportLayout = typeof exportLayouts.$inferInsert;
 /**
  * Report drafts table - stores shareable report configurations
  */
-export const reportDrafts = mysqlTable("reportDrafts", {
-  id: int("id").autoincrement().primaryKey(),
+export const reportDrafts = pgTable("reportDrafts", {
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   
@@ -336,8 +350,8 @@ export const reportDrafts = mysqlTable("reportDrafts", {
   shareToken: varchar("shareToken", { length: 64 }).notNull().unique(),
   
   // Report configuration
-  selectedFields: json("selectedFields").$type<string[]>().notNull(),
-  filters: json("filters").$type<{
+  selectedFields: jsonb("selectedFields").$type<string[]>().notNull(),
+  filters: jsonb("filters").$type<{
     barangay?: string;
     municipality?: string;
     status?: string;
@@ -351,19 +365,19 @@ export const reportDrafts = mysqlTable("reportDrafts", {
   
   // Layout selection (either predefined or custom layout ID)
   exportLayout: varchar("exportLayout", { length: 50 }).notNull(),
-  customLayoutId: int("customLayoutId").references(() => exportLayouts.id),
+  customLayoutId: integer("customLayoutId").references(() => exportLayouts.id),
   
   // Draft metadata
   isPublic: boolean("isPublic").default(false).notNull(),
-  viewCount: int("viewCount").default(0).notNull(),
+  viewCount: integer("viewCount").default(0).notNull(),
   lastViewedAt: timestamp("lastViewedAt"),
   
   // Created by user
-  createdBy: int("createdBy").references(() => users.id),
+  createdBy: integer("createdBy").references(() => users.id),
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type ReportDraft = typeof reportDrafts.$inferSelect;
@@ -372,21 +386,21 @@ export type InsertReportDraft = typeof reportDrafts.$inferInsert;
 /**
  * Draft comments table - stores comments on report drafts for team collaboration
  */
-export const draftComments = mysqlTable("draftComments", {
-  id: int("id").autoincrement().primaryKey(),
+export const draftComments = pgTable("draftComments", {
+  id: serial("id").primaryKey(),
   
   // Reference to the draft
-  draftId: int("draftId").references(() => reportDrafts.id, { onDelete: "cascade" }).notNull(),
+  draftId: integer("draftId").references(() => reportDrafts.id, { onDelete: "cascade" }).notNull(),
   
   // Comment content
   content: text("content").notNull(),
   
   // Comment author
-  authorId: int("authorId").references(() => users.id).notNull(),
+  authorId: integer("authorId").references(() => users.id).notNull(),
   
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type DraftComment = typeof draftComments.$inferSelect;
@@ -395,8 +409,8 @@ export type InsertDraftComment = typeof draftComments.$inferInsert;
 /**
  * CBMS threshold configurations - stores per-indicator alert thresholds
  */
-export const cbmsThresholds = mysqlTable("cbmsThresholds", {
-  id: int("id").autoincrement().primaryKey(),
+export const cbmsThresholds = pgTable("cbmsThresholds", {
+  id: serial("id").primaryKey(),
 
   // The indicator key (e.g. "belowPoverty", "informalSettlers")
   indicatorKey: varchar("indicatorKey", { length: 100 }).notNull().unique(),
@@ -405,23 +419,23 @@ export const cbmsThresholds = mysqlTable("cbmsThresholds", {
   indicatorName: varchar("indicatorName", { length: 200 }).notNull(),
 
   // CBMS baseline percentage for this indicator
-  baselinePct: decimal("baselinePct", { precision: 6, scale: 2 }).notNull(),
+  baselinePct: numeric("baselinePct", { precision: 6, scale: 2 }).notNull(),
 
   // Alert fires when live % EXCEEDS baseline by this many percentage points
-  warnThresholdPct: decimal("warnThresholdPct", { precision: 6, scale: 2 }).default("5.00").notNull(),
+  warnThresholdPct: numeric("warnThresholdPct", { precision: 6, scale: 2 }).default("5.00").notNull(),
 
   // Alert fires at critical level when live % exceeds baseline by this many pp
-  criticalThresholdPct: decimal("criticalThresholdPct", { precision: 6, scale: 2 }).default("10.00").notNull(),
+  criticalThresholdPct: numeric("criticalThresholdPct", { precision: 6, scale: 2 }).default("10.00").notNull(),
 
   // Whether this threshold is active
   isActive: boolean("isActive").default(true).notNull(),
 
   // Who last updated this threshold
-  updatedBy: int("updatedBy").references(() => users.id),
+  updatedBy: integer("updatedBy").references(() => users.id),
 
   // Timestamps
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type CbmsThreshold = typeof cbmsThresholds.$inferSelect;

@@ -16,7 +16,7 @@ Create two Render services for CFDP:
 1. Web Service: CFDP server
 2. Static Site: CFDP client
 
-You also need a managed MySQL database (Render or external) for production.
+You also need a managed PostgreSQL database for production.
 
 ## 1) Server service (Web Service)
 

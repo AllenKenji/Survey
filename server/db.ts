@@ -1,18 +1,25 @@
 import { eq, desc, like, or, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { InsertUser, users, households, surveyResponses, InsertHousehold, InsertSurveyResponse, Household, SurveyResponse, exportLayouts, InsertExportLayout, ExportLayout, reportDrafts, InsertReportDraft, ReportDraft, draftComments, InsertDraftComment, DraftComment, InsertLocalAuthCredential, localAuthCredentials } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: Pool | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+      });
+      _db = drizzle(_pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
+      _pool = null;
     }
   }
   return _db;
@@ -68,7 +75,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -117,7 +125,7 @@ export async function getLocalCredentialByUsername(username: string) {
       .limit(1);
   } catch (error: any) {
     const code = error?.cause?.code;
-    if (code === "ER_NO_SUCH_TABLE") {
+    if (code === "ER_NO_SUCH_TABLE" || code === "42P01") {
       console.warn("[LocalAuth] localAuthCredentials table is missing. Run database migrations (pnpm db:push).");
       return undefined;
     }
@@ -138,7 +146,7 @@ export async function hasLocalAuthSchema(): Promise<boolean> {
     return true;
   } catch (error: any) {
     const code = error?.cause?.code;
-    if (code === "ER_NO_SUCH_TABLE") {
+    if (code === "ER_NO_SUCH_TABLE" || code === "42P01") {
       return false;
     }
     throw error;
@@ -158,7 +166,8 @@ export async function upsertLocalCredential(credential: InsertLocalAuthCredentia
   await db.insert(localAuthCredentials).values({
     ...credential,
     username: credential.username.trim().toLowerCase(),
-  }).onDuplicateKeyUpdate({
+  }).onConflictDoUpdate({
+    target: localAuthCredentials.userId,
     set: {
       username: credential.username.trim().toLowerCase(),
       passwordHash: credential.passwordHash,
