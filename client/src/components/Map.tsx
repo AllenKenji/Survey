@@ -94,6 +94,12 @@ const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
 
 function loadMapScript() {
   return new Promise(resolve => {
+    if (!API_KEY) {
+      console.warn("Map: VITE_FRONTEND_FORGE_API_KEY is not set — skipping Google Maps load.");
+      resolve(null);
+      return;
+    }
+
     if (window.google && window.google.maps) {
       resolve(null);
       return;
@@ -137,8 +143,8 @@ export function MapView({
 
   const init = usePersistFn(async () => {
     await loadMapScript();
-    if (!mapContainer.current) {
-      console.error("Map container not found");
+    // loadMapScript resolves without loading when API_KEY is absent
+    if (!window.google?.maps || !mapContainer.current) {
       return;
     }
     map.current = new window.google.maps.Map(mapContainer.current, {
