@@ -63,4 +63,5 @@ export const ENV = {
   localAuthDefaultPassword: process.env.LOCAL_AUTH_DEFAULT_PASSWORD ?? "admin123",
   localAuthDefaultName: process.env.LOCAL_AUTH_DEFAULT_NAME ?? "CFDP Administrator",
   localAuthDefaultRole,
+  bisProvisionApiKey: process.env.BIS_PROVISION_API_KEY ?? "",
 };
