@@ -64,4 +64,8 @@ export const ENV = {
   localAuthDefaultName: process.env.LOCAL_AUTH_DEFAULT_NAME ?? "CFDP Administrator",
   localAuthDefaultRole,
   bisProvisionApiKey: process.env.BIS_PROVISION_API_KEY ?? "",
+  bisAccountProvisionUrl: process.env.BIS_ACCOUNT_PROVISION_URL ?? "",
+  bisAccountProvisionApiKey: process.env.BIS_ACCOUNT_PROVISION_API_KEY ?? "",
+  bisAccountProvisionRequired:
+    String(process.env.BIS_ACCOUNT_PROVISION_REQUIRED ?? "false").trim().toLowerCase() === "true",
 };

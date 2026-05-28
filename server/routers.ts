@@ -11,6 +11,7 @@ import { hashPassword, normalizeUsername, verifyPassword } from "./_core/localAu
 import { sdk } from "./_core/sdk";
 import { ENV } from "./_core/env";
 import { ONE_YEAR_MS } from "@shared/const";
+import { provisionBisAccountFromCfdp } from "./bisAccountProvision";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -127,6 +128,14 @@ export const appRouter = router({
           isActive: true,
         });
 
+        await provisionBisAccountFromCfdp({
+          name: input.name,
+          username,
+          password: input.password,
+          role: input.role,
+          requestedBy: ctx.user.openId,
+        });
+
         return {
           success: true,
           user,
@@ -221,6 +230,43 @@ export const appRouter = router({
         }
 
         await db.setLocalCredentialActiveByUserId(input.userId, input.isActive);
+        return { success: true } as const;
+      }),
+    deleteLocalUser: protectedProcedure
+      .input(
+        z.object({
+          userId: z.number().int().positive(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can delete users" });
+        }
+
+        if (!ENV.localAuthEnabled) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Local auth is disabled" });
+        }
+
+        const hasSchema = await db.hasLocalAuthSchema();
+        if (!hasSchema) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Local auth database schema is missing. Run: pnpm db:push",
+          });
+        }
+
+        if (ctx.user.id === input.userId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You cannot delete your own account" });
+        }
+
+        const localUsers = await db.listLocalAuthUsers();
+        const target = localUsers.find((user) => user.id === input.userId);
+        if (!target) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        }
+
+        await db.deleteLocalAuthUserById(input.userId);
+
         return { success: true } as const;
       }),
     updateLocalUserDetails: protectedProcedure

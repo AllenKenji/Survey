@@ -99,6 +99,15 @@ export default function UserManagement() {
       toast.error(error.message || "Failed to update user details.");
     },
   });
+  const deleteLocalUserMutation = trpc.auth.deleteLocalUser.useMutation({
+    onSuccess: async () => {
+      toast.success("User deleted successfully.");
+      await utils.auth.listLocalUsers.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete user.");
+    },
+  });
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async () => {
       toast.success("User created successfully.");
@@ -231,6 +240,17 @@ export default function UserManagement() {
       username: trimmedUsername,
       email: trimmedEmail ? trimmedEmail : null,
       role: editRole,
+    });
+  };
+
+  const handleDeleteUser = async (targetUserId: number, targetName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete ${targetName}? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    await deleteLocalUserMutation.mutateAsync({
+      userId: targetUserId,
     });
   };
 
@@ -414,6 +434,16 @@ export default function UserManagement() {
                           disabled={setUserActiveMutation.isPending || (!user.isActive ? false : currentUser?.id === user.id)}
                         >
                           {user.isActive ? "Deactivate User" : "Activate User"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            void handleDeleteUser(user.id, user.name ?? "this user");
+                          }}
+                          disabled={deleteLocalUserMutation.isPending || currentUser?.id === user.id}
+                        >
+                          Delete User
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -274,6 +274,15 @@ export async function listLocalAuthUsers() {
     .orderBy(desc(users.createdAt));
 }
 
+export async function deleteLocalAuthUserById(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db.delete(users).where(eq(users.id, userId));
+}
+
 // Household operations
 export async function createHousehold(household: InsertHousehold): Promise<Household> {
   const db = await getDb();

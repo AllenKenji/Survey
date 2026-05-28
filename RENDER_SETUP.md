@@ -41,6 +41,7 @@ pnpm start
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `BIS_API_BASE_URL`
+- `BIS_ACCOUNT_PROVISION_API_KEY`
 - `OAUTH_SERVER_URL` (or `VITE_OAUTH_PORTAL_URL`)
 
 ### Optional environment variables
@@ -48,6 +49,8 @@ pnpm start
 - `DEV_AUTH_BYPASS=false`
 - `LOCAL_AUTH_ENABLED=true`
 - `LOCAL_AUTH_BOOTSTRAP=false`
+- `BIS_ACCOUNT_PROVISION_URL` (defaults to `${BIS_API_BASE_URL}/api/internal/cfdp/provision-account`)
+- `BIS_ACCOUNT_PROVISION_REQUIRED=false` (set `true` to fail CFDP registration when BIS sync fails)
 
 ## 2) Client service (Static Site)
 
