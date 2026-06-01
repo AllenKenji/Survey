@@ -834,10 +834,10 @@ export default function SurveyForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 px-2 sm:px-0">
       {/* Header */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="text-primary font-medium">New Survey</span>
             <span>/</span>
@@ -850,14 +850,21 @@ export default function SurveyForm() {
             </div>
           )}
         </div>
-        <h2 className="text-3xl font-bold tracking-tight">Family Survey Questionnaire</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Family Survey Questionnaire</h2>
         <p className="text-muted-foreground">Cagayano Family Development Program (CFDP) — "No Family Left Behind"</p>
       </div>
 
       {/* Progress Steps */}
       <div className="relative hidden md:block">
         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-secondary -z-10" />
-        <div className="absolute top-1/2 left-0 h-0.5 bg-primary -z-10 transition-all duration-500" style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }} />
+        <div className="absolute top-1/2 left-0 w-full -z-10 flex gap-0.5">
+          {steps.slice(1).map((step, index) => (
+            <span
+              key={`progress-${step.id}`}
+              className={`h-0.5 flex-1 transition-colors duration-300 ${index < currentStep - 1 ? "bg-primary" : "bg-transparent"}`}
+            />
+          ))}
+        </div>
         <div className="flex justify-between">
           {steps.map((step) => (
             <button
@@ -877,7 +884,7 @@ export default function SurveyForm() {
         </div>
       </div>
 
-      <div className="md:hidden flex items-center justify-between text-sm font-medium border-b pb-4">
+      <div className="md:hidden sticky top-16 z-10 bg-background/95 backdrop-blur border-b py-3 px-1 flex items-center justify-between text-sm font-medium">
         <span>Step {currentStep} of {steps.length}</span>
         <span className="text-primary">{steps[currentStep - 1].title}</span>
       </div>
@@ -890,7 +897,7 @@ export default function SurveyForm() {
           <CardDescription>{steps[currentStep - 1].description}</CardDescription>
         </CardHeader>
 
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-4 sm:p-6 space-y-6">
 
           {/* ── Section A: Household Identification ─────────────────────────── */}
           {currentStep === 1 && (
@@ -1102,7 +1109,7 @@ export default function SurveyForm() {
           {/* ── Section C: Household Composition (Member Roster) ─────────────── */}
           {currentStep === 3 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Label className="text-base">Household Members List (excluding Head)</Label>
                 <Button size="sm" onClick={addMember} variant="outline"><Plus className="h-4 w-4 mr-2" /> Add Member</Button>
               </div>
@@ -2074,15 +2081,15 @@ export default function SurveyForm() {
         </CardContent>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between p-6 border-t bg-secondary/5">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
+        <div className="sticky bottom-0 z-20 md:static flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 border-t bg-background/95 sm:bg-secondary/5 backdrop-blur md:backdrop-blur-none">
+          <Button className="w-full sm:w-auto min-h-11" variant="outline" onClick={handleBack} disabled={currentStep === 1}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => toast.success("Draft saved!")}>
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2">
+            <Button className="w-full sm:w-auto min-h-11" variant="ghost" onClick={() => toast.success("Draft saved!")}>
               <Save className="mr-2 h-4 w-4" /> Save Draft
             </Button>
-            <Button onClick={handleNext}>
+            <Button className="w-full sm:w-auto min-h-11" onClick={handleNext}>
               {currentStep === steps.length ? (
                 <><CheckCircle2 className="mr-2 h-4 w-4" /> Submit Survey</>
               ) : (

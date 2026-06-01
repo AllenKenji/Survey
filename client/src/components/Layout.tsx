@@ -11,7 +11,10 @@ import {
   Bell,
   ShieldCheck,
   TrendingUp,
-  Database
+  Database,
+  CalendarDays,
+  FolderKanban,
+  UserSquare2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -65,6 +68,24 @@ export default function Layout({ children, role = "admin", userName = "User", us
       title: "CBMS Data",
       href: "/cbms",
       icon: Database,
+      roles: ["admin", "supervisor"],
+    },
+    {
+      title: "SK Projects",
+      href: "/sk/projects",
+      icon: FolderKanban,
+      roles: ["admin", "supervisor", "surveyor"],
+    },
+    {
+      title: "SK Programs",
+      href: "/sk/programs",
+      icon: CalendarDays,
+      roles: ["admin", "supervisor", "surveyor"],
+    },
+    {
+      title: "SK Officials",
+      href: "/sk/officials",
+      icon: UserSquare2,
       roles: ["admin", "supervisor"],
     },
     {
@@ -137,7 +158,7 @@ export default function Layout({ children, role = "admin", userName = "User", us
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-64 fixed inset-y-0 z-30">
+      <aside className="hidden lg:block w-64 fixed inset-y-0 z-30">
         <SidebarContent />
       </aside>
 
@@ -149,14 +170,14 @@ export default function Layout({ children, role = "admin", userName = "User", us
       </Sheet>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out">
+      <main className="flex-1 lg:ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out">
         {/* Top Header */}
-        <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 px-6 flex items-center justify-between">
+        <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setIsMobileOpen(true)}
             >
               <Menu className="h-5 w-5" />
@@ -179,7 +200,7 @@ export default function Layout({ children, role = "admin", userName = "User", us
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
           {children}
         </div>
       </main>

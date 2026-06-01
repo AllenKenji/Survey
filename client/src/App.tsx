@@ -17,6 +17,9 @@ import BarangayPerformance from "./pages/BarangayPerformance";
 import Reports from "./pages/Reports";
 import CBMSData from "./pages/CBMSData";
 import LoginPage from "./pages/LoginPage";
+import SKProjects from "@/pages/SKProjects";
+import SKPrograms from "@/pages/SKPrograms";
+import SKOfficials from "@/pages/SKOfficials";
 import { useEffect } from "react";
 import { useAuth } from "./_core/hooks/useAuth";
 
@@ -99,6 +102,9 @@ function App() {
                 </Route>
                 <Route path="/reports" component={Reports} />
                 <Route path="/cbms" component={CBMSData} />
+                <Route path="/sk/projects" component={SKProjects} />
+                <Route path="/sk/programs" component={SKPrograms} />
+                <Route path="/sk/officials" component={SKOfficials} />
                 <Route component={NotFound} />
               </Switch>
             </Layout>

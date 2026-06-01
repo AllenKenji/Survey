@@ -211,7 +211,7 @@ export default function HouseholdMasterList() {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => setLocation("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -225,8 +225,8 @@ export default function HouseholdMasterList() {
 
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between gap-4">
-              <div className="relative w-full md:w-96">
+            <div className="flex flex-col lg:flex-row justify-between gap-4">
+              <div className="relative w-full lg:w-96">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by keyword (e.g., Farmer, Married, 45)..."
@@ -235,11 +235,12 @@ export default function HouseholdMasterList() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <div className="flex items-center border rounded-md px-3 bg-background">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                   <select 
                     className="bg-transparent text-sm outline-none h-9"
+                    aria-label="Filter households by 4Ps status"
                     value={filter4Ps}
                     onChange={(e) => setFilter4Ps(e.target.value as any)}
                   >
@@ -248,10 +249,10 @@ export default function HouseholdMasterList() {
                     <option value="No">Non-4Ps</option>
                   </select>
                 </div>
-                <Button variant="outline" onClick={handleExportCSV}>
+                <Button className="flex-1 sm:flex-none" variant="outline" onClick={handleExportCSV}>
                   <Download className="mr-2 h-4 w-4" /> CSV
                 </Button>
-                <Button variant="outline" onClick={handleExportPDF}>
+                <Button className="flex-1 sm:flex-none" variant="outline" onClick={handleExportPDF}>
                   <Download className="mr-2 h-4 w-4" /> PDF
                 </Button>
               </div>
