@@ -307,23 +307,15 @@ async function startServer() {
     res.redirect(302, redirectTarget);
   });
 
-  // Route all direct entry roots through switch-account so browser address-bar
-  // opens always land on login flow.
+  // Route only bare domain root through switch-account so typing the domain
+  // lands on login flow, while refreshing authenticated app routes keeps session.
   const switchAccountPath = `${appBasePath || ""}/switch-account`;
-  const entryRoots = new Set<string>(["/"]);
-  if (appBasePath) {
-    entryRoots.add(appBasePath);
-    entryRoots.add(`${appBasePath}/`);
-  }
-
-  for (const entryRoot of entryRoots) {
-    app.get(entryRoot, (_req, res) => {
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
-      res.setHeader("Pragma", "no-cache");
-      res.setHeader("Expires", "0");
-      res.redirect(302, switchAccountPath);
-    });
-  }
+  app.get("/", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.redirect(302, switchAccountPath);
+  });
 
   // OAuth callback under /survey/api/oauth/callback
   registerOAuthRoutes(app, `${appBasePath}/api`);
