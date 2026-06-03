@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 
+const FORCE_LOGGED_OUT_KEY = "cfdp-force-logged-out";
+
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
@@ -16,6 +18,9 @@ export default function LoginPage() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async () => {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(FORCE_LOGGED_OUT_KEY);
+      }
       await utils.auth.me.invalidate();
       toast.success("Signed in successfully");
       setLocation("/");

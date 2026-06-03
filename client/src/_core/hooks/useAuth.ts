@@ -8,11 +8,30 @@ type UseAuthOptions = {
   redirectPath?: string;
 };
 
+const FORCE_LOGGED_OUT_KEY = "cfdp-force-logged-out";
+const FORCE_LOGGED_OUT_TTL_MS = 30000;
+
 export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath = getLoginUrl() } =
     options ?? {};
   const utils = trpc.useUtils();
-  const [forceLoggedOut, setForceLoggedOut] = useState(false);
+  const [forceLoggedOut, setForceLoggedOut] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const raw = window.sessionStorage.getItem(FORCE_LOGGED_OUT_KEY);
+    if (!raw) return false;
+
+    const markerTime = Number.parseInt(raw, 10);
+    if (!Number.isFinite(markerTime)) {
+      window.sessionStorage.removeItem(FORCE_LOGGED_OUT_KEY);
+      return false;
+    }
+
+    const isFresh = Date.now() - markerTime < FORCE_LOGGED_OUT_TTL_MS;
+    if (!isFresh) {
+      window.sessionStorage.removeItem(FORCE_LOGGED_OUT_KEY);
+    }
+    return isFresh;
+  });
   const syncBisPresenceMutation = trpc.auth.syncBisPresence.useMutation();
   const syncBisPresenceMutateAsync = syncBisPresenceMutation.mutateAsync;
   const syncInFlightRef = useRef(false);
@@ -53,6 +72,9 @@ export function useAuth(options?: UseAuthOptions) {
 
   const logout = useCallback(async () => {
     setForceLoggedOut(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(FORCE_LOGGED_OUT_KEY, Date.now().toString());
+    }
     utils.auth.me.setData(undefined, null);
 
     try {
@@ -66,14 +88,8 @@ export function useAuth(options?: UseAuthOptions) {
           });
       }
 
-      void logoutMutation.mutateAsync().catch((error: unknown) => {
-        if (
-          error instanceof TRPCClientError &&
-          error.data?.code === "UNAUTHORIZED"
-        ) {
-          return;
-        }
-        console.warn("[Auth] Background logout mutation failed", error);
+      await logoutMutation.mutateAsync({
+        sessionId: bisPresenceSessionId,
       });
 
       if (typeof window !== "undefined") {
@@ -84,7 +100,14 @@ export function useAuth(options?: UseAuthOptions) {
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
+        if (typeof window !== "undefined") {
+          window.location.href = withLogoutMarker(getLoginUrl());
+        }
         return;
+      }
+      console.warn("[Auth] Logout mutation failed", error);
+      if (typeof window !== "undefined") {
+        window.location.href = withLogoutMarker(getLoginUrl());
       }
       throw error;
     } finally {
