@@ -239,7 +239,12 @@ async function startServer() {
     if (!user) {
       const credential = await db.getLocalCredentialByUsername(username);
       if (credential?.isActive) {
-        user = await db.getUserById(credential.userId);
+        const credentialUser = await db.getUserById(credential.userId);
+        // Never reuse an existing BIS-linked account by email fallback,
+        // otherwise different BIS users that share the same email can overwrite each other.
+        if (credentialUser?.openId?.startsWith("local:")) {
+          user = credentialUser;
+        }
       }
     }
 
