@@ -12,7 +12,7 @@ import { ensureDefaultLocalAdmin, hashPassword, normalizeUsername } from "./loca
 import { ENV } from "./env";
 import * as db from "../db";
 import { ONE_YEAR_MS } from "@shared/const";
-import { setCanonicalSessionCookie } from "./cookies";
+import { clearSessionCookieVariants, setCanonicalSessionCookie } from "./cookies";
 import { sdk } from "./sdk";
 
 type SurveyHandoffPayload = {
@@ -278,6 +278,14 @@ async function startServer() {
         ? appBasePath
         : `${appBasePath}/`;
     res.redirect(302, normalizedBase);
+  });
+
+  app.get(`${appBasePath}/switch-account`, (req, res) => {
+    clearSessionCookieVariants(req, res);
+    const normalizedBase = !appBasePath || appBasePath === "/"
+      ? ""
+      : appBasePath;
+    res.redirect(302, `${normalizedBase}/login?switched=1`);
   });
 
   // OAuth callback under /survey/api/oauth/callback

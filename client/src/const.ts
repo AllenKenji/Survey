@@ -30,3 +30,5 @@ export const getLoginUrl = () => {
 
   return url.toString();
 };
+
+export const getSwitchAccountUrl = () => `${APP_BASE_PATH}/switch-account`;
