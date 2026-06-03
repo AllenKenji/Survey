@@ -33,7 +33,7 @@ function resolveBisUid(openId: string | null | undefined): string | null {
 }
 
 async function syncBisPresenceLease(
-  user: { openId: string; role: string },
+  user: { openId: string; role: string; email?: string | null; name?: string | null },
   input: { sessionId: string; online: boolean }
 ): Promise<boolean> {
   const role = String(user.role || "").trim().toLowerCase();
@@ -42,9 +42,11 @@ async function syncBisPresenceLease(
   }
 
   const uid = resolveBisUid(user.openId);
+  const email = String(user.email || "").trim().toLowerCase();
+  const name = String(user.name || "").trim();
   const presenceUrl = resolveBisPresenceUrl();
   const provisionKey = String(ENV.bisAccountProvisionApiKey || "").trim();
-  if (!uid || !presenceUrl || !provisionKey) {
+  if ((!uid && !email) || !presenceUrl || !provisionKey) {
     return false;
   }
 
@@ -57,6 +59,8 @@ async function syncBisPresenceLease(
       },
       body: JSON.stringify({
         uid,
+        email,
+        name,
         role,
         sessionId: input.sessionId,
         online: input.online,

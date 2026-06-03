@@ -36,19 +36,22 @@ function App() {
   const { user, loading, isAuthenticated, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const role = toAppRole(user?.role);
+  const hasLoggedOutMarker =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("loggedOut");
 
   useEffect(() => {
     if (loading) return;
 
-    if (!isAuthenticated && location !== "/login") {
+    if (!isAuthenticated && !location.startsWith("/login")) {
       setLocation("/login");
       return;
     }
 
-    if (isAuthenticated && location === "/login") {
+    if (isAuthenticated && location.startsWith("/login") && !hasLoggedOutMarker) {
       setLocation("/");
     }
-  }, [isAuthenticated, loading, location, setLocation]);
+  }, [hasLoggedOutMarker, isAuthenticated, loading, location, setLocation]);
 
   if (loading) {
     return (
