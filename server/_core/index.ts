@@ -281,11 +281,30 @@ async function startServer() {
   });
 
   app.get(`${appBasePath}/switch-account`, (req, res) => {
+    const cookieHeader = String(req.headers.cookie || "");
+    const hasSessionCookie = cookieHeader.includes("manus-session=");
+
+    console.log("[Auth] switch-account requested", {
+      host: req.hostname,
+      path: req.path,
+      hasSessionCookie,
+      cookieHeaderLength: cookieHeader.length,
+      userAgent: req.headers["user-agent"] || "",
+    });
+
     clearSessionCookieVariants(req, res);
+
+    // Prevent cached redirects from bypassing fresh cookie clearing.
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     const normalizedBase = !appBasePath || appBasePath === "/"
       ? ""
       : appBasePath;
-    res.redirect(302, `${normalizedBase}/login?loggedOut=${Date.now()}`);
+    const redirectTarget = `${normalizedBase}/login?loggedOut=${Date.now()}`;
+    console.log("[Auth] switch-account redirect", { redirectTarget });
+    res.redirect(302, redirectTarget);
   });
 
   // OAuth callback under /survey/api/oauth/callback
