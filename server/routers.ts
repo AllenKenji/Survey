@@ -413,6 +413,14 @@ export const appRouter = router({
 
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      // Clear alternate cookie attributes too, in case proxy headers differ between
+      // login and logout requests (common in some managed deployments).
+      ctx.res.clearCookie(COOKIE_NAME, {
+        ...cookieOptions,
+        secure: !cookieOptions.secure,
+        sameSite: cookieOptions.secure ? "lax" : "none",
+        maxAge: -1,
+      });
       return {
         success: true,
       } as const;
