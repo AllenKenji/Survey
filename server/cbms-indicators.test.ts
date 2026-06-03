@@ -88,8 +88,8 @@ describe("computeCBMSIndicators", () => {
     ];
 
     for (const hh of testHouseholds) {
-      const result = await db.insert(households).values(hh);
-      testHouseholdIds.push(Number(result[0].insertId));
+      const [inserted] = await db.insert(households).values(hh).returning({ id: households.id });
+      testHouseholdIds.push(inserted!.id);
     }
 
     // Insert survey responses for approved households

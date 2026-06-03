@@ -290,11 +290,8 @@ export async function createHousehold(household: InsertHousehold): Promise<House
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(households).values(household);
-  const insertedId = Number(result[0].insertId);
-  
-  const inserted = await db.select().from(households).where(eq(households.id, insertedId)).limit(1);
-  return inserted[0]!;
+  const [inserted] = await db.insert(households).values(household).returning();
+  return inserted!;
 }
 
 export async function getHouseholdById(id: number): Promise<Household | undefined> {
@@ -380,11 +377,8 @@ export async function createSurveyResponse(response: InsertSurveyResponse): Prom
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(surveyResponses).values(response);
-  const insertedId = Number(result[0].insertId);
-  
-  const inserted = await db.select().from(surveyResponses).where(eq(surveyResponses.id, insertedId)).limit(1);
-  return inserted[0]!;
+  const [inserted] = await db.insert(surveyResponses).values(response).returning();
+  return inserted!;
 }
 
 export async function getSurveyResponseByHouseholdId(householdId: number): Promise<SurveyResponse | undefined> {
@@ -774,11 +768,8 @@ export async function createReportTemplate(data: {
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(reportTemplates).values(data);
-  const insertedId = Number(result[0].insertId);
-  
-  const inserted = await db.select().from(reportTemplates).where(eq(reportTemplates.id, insertedId)).limit(1);
-  return inserted[0]!;
+  const [inserted] = await db.insert(reportTemplates).values(data).returning();
+  return inserted!;
 }
 
 export async function getReportTemplateById(id: number) {
@@ -922,11 +913,8 @@ export async function createExportLayout(data: InsertExportLayout): Promise<Expo
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(exportLayouts).values(data);
-  const insertedId = Number(result[0].insertId);
-  
-  const inserted = await db.select().from(exportLayouts).where(eq(exportLayouts.id, insertedId)).limit(1);
-  return inserted[0]!;
+  const [inserted] = await db.insert(exportLayouts).values(data).returning();
+  return inserted!;
 }
 
 export async function getExportLayouts(userId: number): Promise<ExportLayout[]> {
@@ -1006,11 +994,8 @@ export async function createReportDraft(data: {
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(reportDrafts).values(data);
-  const insertedId = Number(result[0].insertId);
-  
-  const inserted = await db.select().from(reportDrafts).where(eq(reportDrafts.id, insertedId)).limit(1);
-  return inserted[0]!;
+  const [inserted] = await db.insert(reportDrafts).values(data).returning();
+  return inserted!;
 }
 
 export async function getReportDrafts(userId: number): Promise<ReportDraft[]> {
@@ -1114,12 +1099,7 @@ export async function createDraftComment(data: InsertDraftComment): Promise<Draf
     throw new Error("Database not available");
   }
 
-  const result = await db.insert(draftComments).values(data);
-  const insertedId = Number(result[0].insertId);
-  
-  const [comment] = await db.select().from(draftComments)
-    .where(eq(draftComments.id, insertedId));
-  
+  const [comment] = await db.insert(draftComments).values(data).returning();
   return comment;
 }
 
