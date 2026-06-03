@@ -1,7 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -14,6 +14,8 @@ export function useAuth(options?: UseAuthOptions) {
   const utils = trpc.useUtils();
   const [forceLoggedOut, setForceLoggedOut] = useState(false);
   const syncBisPresenceMutation = trpc.auth.syncBisPresence.useMutation();
+  const syncBisPresenceMutateAsync = syncBisPresenceMutation.mutateAsync;
+  const syncInFlightRef = useRef(false);
   const bisPresenceSessionId = useMemo(() => {
     if (typeof window === "undefined") return "server";
 
@@ -55,8 +57,7 @@ export function useAuth(options?: UseAuthOptions) {
 
     try {
       if (meQuery.data) {
-        void syncBisPresenceMutation
-          .mutateAsync({
+        void syncBisPresenceMutateAsync({
             sessionId: bisPresenceSessionId,
             online: false,
           })
@@ -94,7 +95,7 @@ export function useAuth(options?: UseAuthOptions) {
     bisPresenceSessionId,
     logoutMutation,
     meQuery.data,
-    syncBisPresenceMutation,
+    syncBisPresenceMutateAsync,
     utils,
     withLogoutMarker,
   ]);
@@ -161,8 +162,10 @@ export function useAuth(options?: UseAuthOptions) {
 
     let cancelled = false;
     const syncPresence = async () => {
+      if (syncInFlightRef.current) return;
+      syncInFlightRef.current = true;
       try {
-        await syncBisPresenceMutation.mutateAsync({
+        await syncBisPresenceMutateAsync({
           sessionId: bisPresenceSessionId,
           online: true,
         });
@@ -170,6 +173,8 @@ export function useAuth(options?: UseAuthOptions) {
         if (!cancelled) {
           console.warn("[BIS Presence] Failed to sync survey presence", error);
         }
+      } finally {
+        syncInFlightRef.current = false;
       }
     };
 
@@ -182,7 +187,7 @@ export function useAuth(options?: UseAuthOptions) {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [bisPresenceSessionId, forceLoggedOut, state.user, syncBisPresenceMutation]);
+  }, [bisPresenceSessionId, forceLoggedOut, state.user, syncBisPresenceMutateAsync]);
 
   return {
     ...state,
