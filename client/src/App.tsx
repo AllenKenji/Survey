@@ -36,23 +36,25 @@ function App() {
   const { user, loading, isAuthenticated, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const role = toAppRole(user?.role);
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : location;
+  const isLoginPath = currentPath === "/login" || currentPath.endsWith("/login");
   const hasLoggedOutMarker =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("loggedOut");
-  const shouldForceLoginScreen = hasLoggedOutMarker && location.startsWith("/login");
+  const shouldForceLoginScreen = hasLoggedOutMarker && isLoginPath;
 
   useEffect(() => {
     if (loading) return;
 
-    if (!isAuthenticated && !location.startsWith("/login")) {
+    if (!isAuthenticated && !isLoginPath) {
       setLocation("/login");
       return;
     }
 
-    if (isAuthenticated && location.startsWith("/login") && !hasLoggedOutMarker) {
+    if (isAuthenticated && isLoginPath && !hasLoggedOutMarker) {
       setLocation("/");
     }
-  }, [hasLoggedOutMarker, isAuthenticated, loading, location, setLocation]);
+  }, [hasLoggedOutMarker, isAuthenticated, isLoginPath, loading, setLocation]);
 
   if (loading) {
     return (
