@@ -1,7 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -12,6 +12,7 @@ export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath = getLoginUrl() } =
     options ?? {};
   const utils = trpc.useUtils();
+  const [forceLoggedOut, setForceLoggedOut] = useState(false);
   const syncBisPresenceMutation = trpc.auth.syncBisPresence.useMutation();
   const bisPresenceSessionId = useMemo(() => {
     if (typeof window === "undefined") return "server";
@@ -38,7 +39,20 @@ export function useAuth(options?: UseAuthOptions) {
     },
   });
 
+  const withLogoutMarker = useCallback((url: string) => {
+    try {
+      const target = new URL(url, window.location.origin);
+      target.searchParams.set("loggedOut", Date.now().toString());
+      return target.toString();
+    } catch {
+      return url;
+    }
+  }, []);
+
   const logout = useCallback(async () => {
+    setForceLoggedOut(true);
+    utils.auth.me.setData(undefined, null);
+
     try {
       if (meQuery.data) {
         void syncBisPresenceMutation
@@ -51,7 +65,19 @@ export function useAuth(options?: UseAuthOptions) {
           });
       }
 
-      await logoutMutation.mutateAsync();
+      void logoutMutation.mutateAsync().catch((error: unknown) => {
+        if (
+          error instanceof TRPCClientError &&
+          error.data?.code === "UNAUTHORIZED"
+        ) {
+          return;
+        }
+        console.warn("[Auth] Background logout mutation failed", error);
+      });
+
+      if (typeof window !== "undefined") {
+        window.location.href = withLogoutMarker(getLoginUrl());
+      }
     } catch (error: unknown) {
       if (
         error instanceof TRPCClientError &&
@@ -64,25 +90,42 @@ export function useAuth(options?: UseAuthOptions) {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
     }
-  }, [bisPresenceSessionId, logoutMutation, meQuery.data, syncBisPresenceMutation, utils]);
+  }, [
+    bisPresenceSessionId,
+    logoutMutation,
+    meQuery.data,
+    syncBisPresenceMutation,
+    utils,
+    withLogoutMarker,
+  ]);
 
   const state = useMemo(() => {
     localStorage.setItem(
       "manus-runtime-user-info",
       JSON.stringify(meQuery.data)
     );
+
+    if (forceLoggedOut) {
+      return {
+        user: null,
+        loading: false,
+        error: null,
+        isAuthenticated: false,
+      };
+    }
+
     return {
       user: meQuery.data ?? null,
       // Block UI only during initial auth load (or explicit logout),
       // not during normal background refetches.
       loading:
         meQuery.isLoading ||
-        logoutMutation.isPending ||
         (!meQuery.data && meQuery.isFetching),
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
     };
   }, [
+    forceLoggedOut,
     meQuery.data,
     meQuery.error,
     meQuery.isFetching,
@@ -92,6 +135,7 @@ export function useAuth(options?: UseAuthOptions) {
   ]);
 
   useEffect(() => {
+    if (forceLoggedOut) return;
     if (!redirectOnUnauthenticated) return;
     if (meQuery.isLoading || logoutMutation.isPending) return;
     if (!meQuery.data && meQuery.isFetching) return;
@@ -101,6 +145,7 @@ export function useAuth(options?: UseAuthOptions) {
 
     window.location.href = redirectPath
   }, [
+    forceLoggedOut,
     redirectOnUnauthenticated,
     redirectPath,
     logoutMutation.isPending,
@@ -111,6 +156,7 @@ export function useAuth(options?: UseAuthOptions) {
   ]);
 
   useEffect(() => {
+    if (forceLoggedOut) return;
     if (!state.user) return;
 
     let cancelled = false;
@@ -136,7 +182,7 @@ export function useAuth(options?: UseAuthOptions) {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [bisPresenceSessionId, state.user, syncBisPresenceMutation]);
+  }, [bisPresenceSessionId, forceLoggedOut, state.user, syncBisPresenceMutation]);
 
   return {
     ...state,
