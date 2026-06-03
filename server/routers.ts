@@ -412,15 +412,31 @@ export const appRouter = router({
       }
 
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      // Clear alternate cookie attributes too, in case proxy headers differ between
-      // login and logout requests (common in some managed deployments).
-      ctx.res.clearCookie(COOKIE_NAME, {
-        ...cookieOptions,
-        secure: !cookieOptions.secure,
-        sameSite: cookieOptions.secure ? "lax" : "none",
-        maxAge: -1,
-      });
+      const appBasePath = (process.env.APP_BASE_PATH || "/survey").trim();
+      const normalizedBasePath = !appBasePath || appBasePath === "/"
+        ? "/"
+        : appBasePath.startsWith("/")
+          ? appBasePath
+          : `/${appBasePath}`;
+
+      const clearPaths = new Set<string>(["/", normalizedBasePath]);
+      const clearVariants = [
+        { secure: cookieOptions.secure, sameSite: cookieOptions.sameSite },
+        { secure: true, sameSite: "none" as const },
+        { secure: false, sameSite: "lax" as const },
+      ];
+
+      for (const path of clearPaths) {
+        for (const variant of clearVariants) {
+          ctx.res.clearCookie(COOKIE_NAME, {
+            ...cookieOptions,
+            ...variant,
+            path,
+            maxAge: -1,
+          });
+        }
+      }
+
       return {
         success: true,
       } as const;
