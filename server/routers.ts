@@ -1,5 +1,7 @@
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
+import {
+  clearSessionCookieVariants,
+  setCanonicalSessionCookie,
+} from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
@@ -159,8 +161,7 @@ export const appRouter = router({
           expiresInMs: ONE_YEAR_MS,
         });
 
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        setCanonicalSessionCookie(ctx.req, ctx.res, sessionToken);
 
         return {
           success: true,
@@ -432,30 +433,7 @@ export const appRouter = router({
         });
       }
 
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      const appBasePath = (process.env.APP_BASE_PATH || "/survey").trim();
-      const normalizedBasePath = !appBasePath || appBasePath === "/"
-        ? "/"
-        : appBasePath.startsWith("/")
-          ? appBasePath
-          : `/${appBasePath}`;
-
-      const clearPaths = new Set<string>(["/", normalizedBasePath]);
-      const clearVariants = [
-        { secure: cookieOptions.secure, sameSite: cookieOptions.sameSite },
-        { secure: true, sameSite: "none" as const },
-        { secure: false, sameSite: "lax" as const },
-      ];
-
-      for (const path of clearPaths) {
-        for (const variant of clearVariants) {
-          ctx.res.clearCookie(COOKIE_NAME, {
-            ...cookieOptions,
-            ...variant,
-            path,
-          });
-        }
-      }
+      clearSessionCookieVariants(ctx.req, ctx.res);
 
       return {
         success: true,

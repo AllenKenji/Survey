@@ -11,8 +11,8 @@ import { serveStatic, setupVite } from "./vite";
 import { ensureDefaultLocalAdmin, hashPassword, normalizeUsername } from "./localAuth";
 import { ENV } from "./env";
 import * as db from "../db";
-import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
-import { getSessionCookieOptions } from "./cookies";
+import { ONE_YEAR_MS } from "@shared/const";
+import { setCanonicalSessionCookie } from "./cookies";
 import { sdk } from "./sdk";
 
 type SurveyHandoffPayload = {
@@ -270,8 +270,7 @@ async function startServer() {
       expiresInMs: ONE_YEAR_MS,
     });
 
-    const cookieOptions = getSessionCookieOptions(req);
-    res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+    setCanonicalSessionCookie(req, res, sessionToken);
 
     const normalizedBase = !appBasePath || appBasePath === "/"
       ? "/"

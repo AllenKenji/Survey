@@ -1,4 +1,5 @@
-import type { CookieOptions, Request } from "express";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import type { CookieOptions, Request, Response } from "express";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
@@ -47,4 +48,39 @@ export function getSessionCookieOptions(
     sameSite: secure ? "none" : "lax",
     secure,
   };
+}
+
+function getNormalizedBasePath() {
+  const appBasePath = (process.env.APP_BASE_PATH || "/survey").trim();
+  if (!appBasePath || appBasePath === "/") {
+    return "/";
+  }
+  return appBasePath.startsWith("/") ? appBasePath : `/${appBasePath}`;
+}
+
+export function clearSessionCookieVariants(req: Request, res: Response) {
+  const cookieOptions = getSessionCookieOptions(req);
+  const normalizedBasePath = getNormalizedBasePath();
+  const clearPaths = new Set<string>(["/", normalizedBasePath]);
+  const clearVariants = [
+    { secure: cookieOptions.secure, sameSite: cookieOptions.sameSite },
+    { secure: true, sameSite: "none" as const },
+    { secure: false, sameSite: "lax" as const },
+  ];
+
+  for (const path of clearPaths) {
+    for (const variant of clearVariants) {
+      res.clearCookie(COOKIE_NAME, {
+        ...cookieOptions,
+        ...variant,
+        path,
+      });
+    }
+  }
+}
+
+export function setCanonicalSessionCookie(req: Request, res: Response, sessionToken: string) {
+  const cookieOptions = getSessionCookieOptions(req);
+  clearSessionCookieVariants(req, res);
+  res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 }
