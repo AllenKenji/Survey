@@ -307,11 +307,21 @@ async function startServer() {
     res.redirect(302, redirectTarget);
   });
 
-  // Make the bare domain URL behave like a fresh entrypoint into auth.
-  // This ensures typing survey.lits.com.ph lands on login flow.
+  // Route all direct entry roots through switch-account so browser address-bar
+  // opens always land on login flow.
+  const switchAccountPath = `${appBasePath || ""}/switch-account`;
+  const entryRoots = new Set<string>(["/"]);
   if (appBasePath) {
-    app.get("/", (_req, res) => {
-      res.redirect(302, `${appBasePath}/switch-account`);
+    entryRoots.add(appBasePath);
+    entryRoots.add(`${appBasePath}/`);
+  }
+
+  for (const entryRoot of entryRoots) {
+    app.get(entryRoot, (_req, res) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      res.redirect(302, switchAccountPath);
     });
   }
 
