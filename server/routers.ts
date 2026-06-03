@@ -7,7 +7,6 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
-import { storagePut } from "./storage";
 import { syncSurveyToBisResident } from "./bisSync";
 import { hashPassword, normalizeUsername, verifyPassword } from "./_core/localAuth";
 import { sdk } from "./_core/sdk";
@@ -1001,13 +1000,11 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ input, ctx }) => {
-        const buffer = Buffer.from(input.fileData, "base64");
         const fileKey = `households/${ctx.user.id}/${Date.now()}-${input.fileName}`;
-        
-        const { url } = await storagePut(fileKey, buffer, input.mimeType);
-        
+        const dataUrl = `data:${input.mimeType};base64,${input.fileData}`;
+
         return {
-          url,
+          url: dataUrl,
           key: fileKey,
         };
       }),
