@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
+import { createHmac, timingSafeEqual } from "crypto";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
@@ -10,6 +11,18 @@ import { serveStatic, setupVite } from "./vite";
 import { ensureDefaultLocalAdmin, hashPassword, normalizeUsername } from "./localAuth";
 import { ENV } from "./env";
 import * as db from "../db";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { getSessionCookieOptions } from "./cookies";
+import { sdk } from "./sdk";
+
+type SurveyHandoffPayload = {
+  uid: string;
+  email: string;
+  name: string;
+  role: string;
+  iat: number;
+  exp: number;
+};
 
 const normalizeBasePath = (value: string | undefined) => {
   const raw = (value || "/survey").trim();
@@ -36,6 +49,64 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   }
   throw new Error(`No available port found starting from ${startPort}`);
 }
+
+const base64UrlEncode = (value: Buffer | string) => Buffer.from(value).toString("base64url");
+
+const base64UrlDecode = (value: string) => Buffer.from(value, "base64url");
+
+const getSurveyHandoffSecret = () => ENV.surveyHandoffSecret;
+
+const encodeSurveyHandoff = (payload: SurveyHandoffPayload) => {
+  const payloadBytes = Buffer.from(JSON.stringify(payload), "utf-8");
+  const encodedPayload = base64UrlEncode(payloadBytes);
+  const signature = createHmac("sha256", getSurveyHandoffSecret())
+    .update(encodedPayload)
+    .digest();
+
+  return `${encodedPayload}.${base64UrlEncode(signature)}`;
+};
+
+const decodeSurveyHandoff = (token: string): SurveyHandoffPayload | null => {
+  const [encodedPayload, encodedSignature] = token.split(".");
+  if (!encodedPayload || !encodedSignature) {
+    return null;
+  }
+
+  const expectedSignature = createHmac("sha256", getSurveyHandoffSecret())
+    .update(encodedPayload)
+    .digest();
+  const receivedSignature = base64UrlDecode(encodedSignature);
+
+  if (receivedSignature.length !== expectedSignature.length) {
+    return null;
+  }
+
+  if (!timingSafeEqual(receivedSignature, expectedSignature)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(encodedPayload).toString("utf-8")) as Partial<SurveyHandoffPayload>;
+    if (
+      typeof payload.uid !== "string" ||
+      typeof payload.email !== "string" ||
+      typeof payload.name !== "string" ||
+      typeof payload.role !== "string" ||
+      typeof payload.iat !== "number" ||
+      typeof payload.exp !== "number"
+    ) {
+      return null;
+    }
+
+    if (Date.now() > payload.exp * 1000) {
+      return null;
+    }
+
+    return payload as SurveyHandoffPayload;
+  } catch {
+    return null;
+  }
+};
 
 async function startServer() {
   await ensureDefaultLocalAdmin();
@@ -136,6 +207,63 @@ async function startServer() {
       console.error("[BIS Provision] Failed to provision CFDP user", err);
       res.status(500).json({ detail: "Failed to provision CFDP user" });
     }
+  });
+
+  app.get(`${appBasePath}/api/internal/auth/handoff`, async (req, res) => {
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+
+    if (!token) {
+      res.status(400).json({ detail: "token is required" });
+      return;
+    }
+
+    const payload = decodeSurveyHandoff(token);
+    if (!payload) {
+      res.status(403).json({ detail: "Invalid or expired handoff token" });
+      return;
+    }
+
+    const role = payload.role.trim().toLowerCase();
+    if (role !== "surveyor" && role !== "supervisor") {
+      res.status(403).json({ detail: "Survey handoff is only available for surveyor or supervisor accounts" });
+      return;
+    }
+
+    const username = normalizeUsername(payload.email);
+    const credential = await db.getLocalCredentialByUsername(username);
+    if (!credential || !credential.isActive) {
+      res.status(404).json({ detail: "Survey account not found" });
+      return;
+    }
+
+    const user = await db.getUserById(credential.userId);
+    if (!user) {
+      res.status(404).json({ detail: "Survey account is unavailable" });
+      return;
+    }
+
+    await db.upsertUser({
+      openId: user.openId,
+      name: payload.name || user.name || username,
+      email: payload.email,
+      loginMethod: user.loginMethod ?? "local-password",
+      lastSignedIn: new Date(),
+    });
+
+    const sessionToken = await sdk.createSessionToken(user.openId, {
+      name: payload.name || user.name || username,
+      expiresInMs: ONE_YEAR_MS,
+    });
+
+    const cookieOptions = getSessionCookieOptions(req);
+    res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+    const normalizedBase = !appBasePath || appBasePath === "/"
+      ? "/"
+      : appBasePath.endsWith("/")
+        ? appBasePath
+        : `${appBasePath}/`;
+    res.redirect(302, normalizedBase);
   });
 
   // OAuth callback under /survey/api/oauth/callback

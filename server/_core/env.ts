@@ -33,6 +33,12 @@ const localAuthDefaultRole: AuthRole =
     ? process.env.LOCAL_AUTH_DEFAULT_ROLE
     : "admin";
 
+const surveyHandoffSecret =
+  process.env.CFDP_SURVEY_HANDOFF_SECRET &&
+  process.env.CFDP_SURVEY_HANDOFF_SECRET.trim().length > 0
+    ? process.env.CFDP_SURVEY_HANDOFF_SECRET
+    : "cfdp-survey-handoff-dev-secret";
+
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   cookieSecret:
@@ -63,6 +69,7 @@ export const ENV = {
   localAuthDefaultPassword: process.env.LOCAL_AUTH_DEFAULT_PASSWORD ?? "admin123",
   localAuthDefaultName: process.env.LOCAL_AUTH_DEFAULT_NAME ?? "CFDP Administrator",
   localAuthDefaultRole,
+  surveyHandoffSecret,
   bisProvisionApiKey: process.env.BIS_PROVISION_API_KEY ?? "",
   bisAccountProvisionUrl: process.env.BIS_ACCOUNT_PROVISION_URL ?? "",
   bisAccountProvisionApiKey: process.env.BIS_ACCOUNT_PROVISION_API_KEY ?? "",

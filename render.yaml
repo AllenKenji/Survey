@@ -24,6 +24,8 @@ services:
         sync: false
       - key: VITE_OAUTH_PORTAL_URL
         sync: false
+      - key: CFDP_SURVEY_HANDOFF_SECRET
+        sync: false
       - key: OWNER_OPEN_ID
         sync: false
       - key: BUILT_IN_FORGE_API_URL
