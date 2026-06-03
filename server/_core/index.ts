@@ -307,15 +307,19 @@ async function startServer() {
     res.redirect(302, redirectTarget);
   });
 
-  // Route only bare domain root through switch-account so typing the domain
-  // lands on login flow, while refreshing authenticated app routes keeps session.
-  const switchAccountPath = `${appBasePath || ""}/switch-account`;
-  app.get("/", (_req, res) => {
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-    res.redirect(302, switchAccountPath);
-  });
+  // Only redirect bare domain root through switch-account when the app is
+  // mounted under a non-root base path (for example /survey). If the app is
+  // deployed at root, "/" is also the authenticated home route, so redirecting
+  // it would log users out on refresh.
+  if (appBasePath) {
+    const switchAccountPath = `${appBasePath}/switch-account`;
+    app.get("/", (_req, res) => {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+      res.redirect(302, switchAccountPath);
+    });
+  }
 
   // OAuth callback under /survey/api/oauth/callback
   registerOAuthRoutes(app, `${appBasePath}/api`);
