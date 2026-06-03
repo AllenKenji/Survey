@@ -39,6 +39,7 @@ function App() {
   const hasLoggedOutMarker =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("loggedOut");
+  const shouldForceLoginScreen = hasLoggedOutMarker && location.startsWith("/login");
 
   useEffect(() => {
     if (loading) return;
@@ -73,7 +74,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          {!isAuthenticated ? (
+          {!isAuthenticated || shouldForceLoginScreen ? (
             <Switch>
               <Route path="/login" component={LoginPage} />
               <Route component={LoginPage} />
