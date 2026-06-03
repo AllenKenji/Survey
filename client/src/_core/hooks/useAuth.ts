@@ -51,7 +51,7 @@ export function useAuth(options?: UseAuthOptions) {
         }
       }
 
-      await logoutMutation.mutateAsync({ sessionId: bisPresenceSessionId });
+      await logoutMutation.mutateAsync();
     } catch (error: unknown) {
       if (
         error instanceof TRPCClientError &&
