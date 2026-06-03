@@ -32,6 +32,23 @@ function resolveBisUid(openId: string | null | undefined): string | null {
   return normalized.slice(4) || null;
 }
 
+function resolveBisEmail(user: { openId: string; email?: string | null }): string {
+  const directEmail = String(user.email || "").trim().toLowerCase();
+  if (directEmail) {
+    return directEmail;
+  }
+
+  const normalizedOpenId = String(user.openId || "").trim();
+  if (normalizedOpenId.startsWith("local:")) {
+    const localUsername = normalizedOpenId.slice(6).trim().toLowerCase();
+    if (localUsername.includes("@")) {
+      return localUsername;
+    }
+  }
+
+  return "";
+}
+
 async function syncBisPresenceLease(
   user: { openId: string; role: string; email?: string | null; name?: string | null },
   input: { sessionId: string; online: boolean }
@@ -42,7 +59,7 @@ async function syncBisPresenceLease(
   }
 
   const uid = resolveBisUid(user.openId);
-  const email = String(user.email || "").trim().toLowerCase();
+  const email = resolveBisEmail(user);
   const name = String(user.name || "").trim();
   const presenceUrl = resolveBisPresenceUrl();
   const provisionKey = String(ENV.bisAccountProvisionApiKey || "").trim();
@@ -436,7 +453,6 @@ export const appRouter = router({
             ...cookieOptions,
             ...variant,
             path,
-            maxAge: -1,
           });
         }
       }
