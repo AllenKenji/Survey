@@ -13,11 +13,84 @@ import { ENV } from "./_core/env";
 import { ONE_YEAR_MS } from "@shared/const";
 import { provisionBisAccountFromCfdp } from "./bisAccountProvision";
 
+const BIS_PRESENCE_SYNC_ROLES = new Set(["surveyor", "supervisor"]);
+
+function resolveBisPresenceUrl(): string {
+  const baseUrl = String(ENV.bisApiBaseUrl || "").trim();
+  if (!baseUrl) return "";
+  return new URL(
+    "api/internal/cfdp/presence",
+    baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`
+  ).toString();
+}
+
+function resolveBisUid(openId: string | null | undefined): string | null {
+  const normalized = String(openId || "").trim();
+  if (!normalized.startsWith("bis:")) {
+    return null;
+  }
+  return normalized.slice(4) || null;
+}
+
+async function syncBisPresenceLease(
+  user: { openId: string; role: string },
+  input: { sessionId: string; online: boolean }
+): Promise<boolean> {
+  const role = String(user.role || "").trim().toLowerCase();
+  if (!BIS_PRESENCE_SYNC_ROLES.has(role)) {
+    return false;
+  }
+
+  const uid = resolveBisUid(user.openId);
+  const presenceUrl = resolveBisPresenceUrl();
+  const provisionKey = String(ENV.bisAccountProvisionApiKey || "").trim();
+  if (!uid || !presenceUrl || !provisionKey) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(presenceUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-cfdp-provision-key": provisionKey,
+      },
+      body: JSON.stringify({
+        uid,
+        role,
+        sessionId: input.sessionId,
+        online: input.online,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`[BIS Presence] Sync failed (${response.status} ${response.statusText})`);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.warn("[BIS Presence] Sync failed", error);
+    return false;
+  }
+}
+
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    syncBisPresence: protectedProcedure
+      .input(
+        z.object({
+          sessionId: z.string().min(1),
+          online: z.boolean(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const synced = await syncBisPresenceLease(ctx.user, input);
+        return { success: synced } as const;
+      }),
     login: publicProcedure
       .input(
         z.object({
@@ -324,7 +397,20 @@ export const appRouter = router({
 
         return { success: true } as const;
       }),
-    logout: publicProcedure.mutation(({ ctx }) => {
+    logout: publicProcedure
+      .input(
+        z.object({
+          sessionId: z.string().min(1),
+        }).optional()
+      )
+      .mutation(async ({ input, ctx }) => {
+      if (ctx.user && input?.sessionId) {
+        await syncBisPresenceLease(ctx.user, {
+          sessionId: input.sessionId,
+          online: false,
+        });
+      }
+
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return {
