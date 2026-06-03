@@ -55,13 +55,26 @@ function getNormalizedBasePath() {
   if (!appBasePath || appBasePath === "/") {
     return "/";
   }
-  return appBasePath.startsWith("/") ? appBasePath : `/${appBasePath}`;
+  const withLeadingSlash = appBasePath.startsWith("/") ? appBasePath : `/${appBasePath}`;
+  return withLeadingSlash.endsWith("/") && withLeadingSlash.length > 1
+    ? withLeadingSlash.slice(0, -1)
+    : withLeadingSlash;
+}
+
+function getDomainVariants(req: Request): Array<string | undefined> {
+  const hostname = String(req.hostname || "").trim().toLowerCase();
+  if (!hostname || LOCAL_HOSTS.has(hostname) || isIpAddress(hostname)) {
+    return [undefined];
+  }
+
+  return [undefined, hostname, `.${hostname}`];
 }
 
 export function clearSessionCookieVariants(req: Request, res: Response) {
   const cookieOptions = getSessionCookieOptions(req);
   const normalizedBasePath = getNormalizedBasePath();
-  const clearPaths = new Set<string>(["/", normalizedBasePath]);
+  const clearPaths = new Set<string>(["/", normalizedBasePath, `${normalizedBasePath}/`]);
+  const clearDomains = getDomainVariants(req);
   const clearVariants = [
     { secure: cookieOptions.secure, sameSite: cookieOptions.sameSite },
     { secure: true, sameSite: "none" as const },
@@ -69,12 +82,15 @@ export function clearSessionCookieVariants(req: Request, res: Response) {
   ];
 
   for (const path of clearPaths) {
-    for (const variant of clearVariants) {
-      res.clearCookie(COOKIE_NAME, {
-        ...cookieOptions,
-        ...variant,
-        path,
-      });
+    for (const domain of clearDomains) {
+      for (const variant of clearVariants) {
+        res.clearCookie(COOKIE_NAME, {
+          ...cookieOptions,
+          ...variant,
+          path,
+          domain,
+        });
+      }
     }
   }
 }

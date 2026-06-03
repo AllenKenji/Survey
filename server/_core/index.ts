@@ -285,7 +285,7 @@ async function startServer() {
     const normalizedBase = !appBasePath || appBasePath === "/"
       ? ""
       : appBasePath;
-    res.redirect(302, `${normalizedBase}/login?switched=1`);
+    res.redirect(302, `${normalizedBase}/login?loggedOut=${Date.now()}`);
   });
 
   // OAuth callback under /survey/api/oauth/callback
