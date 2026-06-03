@@ -224,34 +224,44 @@ async function startServer() {
     }
 
     const role = payload.role.trim().toLowerCase();
-    if (role !== "surveyor" && role !== "supervisor") {
-      res.status(403).json({ detail: "Survey handoff is only available for surveyor or supervisor accounts" });
+    if (role !== "admin" && role !== "surveyor" && role !== "supervisor") {
+      res.status(403).json({ detail: "Survey handoff is only available for admin, surveyor, or supervisor accounts" });
       return;
     }
 
+    const bisOpenId = `bis:${payload.uid}`;
     const username = normalizeUsername(payload.email);
-    const credential = await db.getLocalCredentialByUsername(username);
-    if (!credential || !credential.isActive) {
-      res.status(404).json({ detail: "Survey account not found" });
-      return;
+
+    let user = await db.getUserByOpenId(bisOpenId);
+
+    // Backward compatibility: if this BIS user was previously mapped to a local credential,
+    // reuse it instead of creating a duplicate account.
+    if (!user) {
+      const credential = await db.getLocalCredentialByUsername(username);
+      if (credential?.isActive) {
+        user = await db.getUserById(credential.userId);
+      }
     }
 
-    const user = await db.getUserById(credential.userId);
-    if (!user) {
-      res.status(404).json({ detail: "Survey account is unavailable" });
-      return;
-    }
+    const resolvedOpenId = user?.openId ?? bisOpenId;
 
     await db.upsertUser({
-      openId: user.openId,
-      name: payload.name || user.name || username,
+      openId: resolvedOpenId,
+      name: payload.name || user?.name || username,
       email: payload.email,
-      loginMethod: user.loginMethod ?? "local-password",
+      loginMethod: user?.loginMethod ?? "bis-handoff",
+      role: role as "admin" | "surveyor" | "supervisor",
       lastSignedIn: new Date(),
     });
 
-    const sessionToken = await sdk.createSessionToken(user.openId, {
-      name: payload.name || user.name || username,
+    const resolvedUser = await db.getUserByOpenId(resolvedOpenId);
+    if (!resolvedUser) {
+      res.status(500).json({ detail: "Failed to initialize handoff user" });
+      return;
+    }
+
+    const sessionToken = await sdk.createSessionToken(resolvedUser.openId, {
+      name: payload.name || resolvedUser.name || username,
       expiresInMs: ONE_YEAR_MS,
     });
 
