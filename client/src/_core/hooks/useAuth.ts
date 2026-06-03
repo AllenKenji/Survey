@@ -41,14 +41,14 @@ export function useAuth(options?: UseAuthOptions) {
   const logout = useCallback(async () => {
     try {
       if (meQuery.data) {
-        try {
-          await syncBisPresenceMutation.mutateAsync({
+        void syncBisPresenceMutation
+          .mutateAsync({
             sessionId: bisPresenceSessionId,
             online: false,
+          })
+          .catch((presenceError) => {
+            console.warn("[BIS Presence] Failed to clear survey presence", presenceError);
           });
-        } catch (presenceError) {
-          console.warn("[BIS Presence] Failed to clear survey presence", presenceError);
-        }
       }
 
       await logoutMutation.mutateAsync();
