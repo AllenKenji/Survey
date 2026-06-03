@@ -11,7 +11,7 @@ type BisResidentPayload = {
   address: {
     houseNumber: string;
     street: string;
-    purok: string;
+    purok?: string;
     barangay: string;
     city: string;
     province: string;
@@ -93,7 +93,7 @@ function buildResidentPayload(
   const street = trimToUndefined(sectionA.street);
   const purok = trimToUndefined(sectionA.purok);
 
-  if (!fullName || !birthDate || !email || !contactNumber || !houseNumber || !street || !purok) {
+  if (!fullName || !birthDate || !email || !contactNumber || !houseNumber || !street) {
     const missing = [];
     if (!fullName) missing.push("fullName");
     if (!birthDate) missing.push("birthDate");
@@ -101,7 +101,6 @@ function buildResidentPayload(
     if (!contactNumber) missing.push("contactNumber");
     if (!houseNumber) missing.push("houseNumber");
     if (!street) missing.push("street");
-    if (!purok) missing.push("purok");
     console.warn(`[BIS Sync] Missing required fields: ${missing.join(", ")}`);
     return null;
   }

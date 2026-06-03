@@ -590,10 +590,6 @@ export default function SurveyForm() {
     if (!street) {
       errors.street = "Street is required for BIS account creation.";
     }
-    const purok = (sectionA.purok ?? "").trim();
-    if (!purok) {
-      errors.purok = "Purok/Sitio is required for BIS account creation.";
-    }
     if (!/^09\d{9}$/.test(respondentContactNumber)) {
       errors.respondentContactNumber = "Respondent contact number must be a valid PH mobile number for BIS account creation.";
     }
@@ -964,8 +960,8 @@ export default function SurveyForm() {
                 {submitErrors.street && <p className="text-xs text-red-600">{submitErrors.street}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Purok / Sitio</Label>
-                <Input className={submitErrors.purok ? "border-red-500 focus-visible:ring-red-500" : ""} placeholder="e.g. Purok 3" value={sectionA.purok} onChange={(e) => setSectionA({ ...sectionA, purok: e.target.value })} />
+                <Label>Purok / Sitio (Optional)</Label>
+                <Input className={submitErrors.purok ? "border-red-500 focus-visible:ring-red-500" : ""} placeholder="Optional" value={sectionA.purok} onChange={(e) => setSectionA({ ...sectionA, purok: e.target.value })} />
                 {submitErrors.purok && <p className="text-xs text-red-600">{submitErrors.purok}</p>}
               </div>
               <div className="space-y-2">
