@@ -307,6 +307,14 @@ async function startServer() {
     res.redirect(302, redirectTarget);
   });
 
+  // Make the bare domain URL behave like a fresh entrypoint into auth.
+  // This ensures typing survey.lits.com.ph lands on login flow.
+  if (appBasePath) {
+    app.get("/", (_req, res) => {
+      res.redirect(302, `${appBasePath}/switch-account`);
+    });
+  }
+
   // OAuth callback under /survey/api/oauth/callback
   registerOAuthRoutes(app, `${appBasePath}/api`);
   // tRPC API under /survey/api/trpc
