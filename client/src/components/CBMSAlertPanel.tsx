@@ -14,7 +14,7 @@ interface CBMSAlertPanelProps {
 }
 
 export default function CBMSAlertPanel({ compact = false, showConfigLink = false }: CBMSAlertPanelProps) {
-  const { data, isLoading, refetch, isFetching } = trpc.cbms.alerts.useQuery(undefined, {
+  const { data, isLoading, isError, error, refetch, isFetching } = trpc.cbms.alerts.useQuery(undefined, {
     refetchInterval: 60_000, // refresh every 60 s
   });
 
@@ -26,6 +26,22 @@ export default function CBMSAlertPanel({ compact = false, showConfigLink = false
         </CardHeader>
         <CardContent className="space-y-2">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-red-700">Unable To Load CBMS Alerts</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-3">
+          <p className="text-xs text-red-700/90">{error?.message || "Please try again."}</p>
+          <Button variant="outline" size="sm" className="h-7" onClick={() => refetch()}>
+            Retry
+          </Button>
         </CardContent>
       </Card>
     );
@@ -65,7 +81,7 @@ export default function CBMSAlertPanel({ compact = false, showConfigLink = false
           </div>
           <div className="flex items-center gap-2">
             {showConfigLink && (
-              <Link href="/cbms-data?tab=thresholds">
+              <Link href="/cbms?tab=thresholds">
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
                   <Settings className="w-3 h-3" /> Configure
                 </Button>
@@ -132,7 +148,7 @@ export default function CBMSAlertPanel({ compact = false, showConfigLink = false
           ))}
 
           {compact && alerts.length > 3 && (
-            <Link href="/cbms-data?tab=live">
+            <Link href="/cbms?tab=live">
               <Button variant="ghost" size="sm" className="w-full text-xs h-7">
                 View all {alerts.length} alerts →
               </Button>

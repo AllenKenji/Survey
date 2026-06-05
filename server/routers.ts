@@ -1035,7 +1035,13 @@ export const appRouter = router({
           warnThresholdPct: z.number().min(0).max(100),
           criticalThresholdPct: z.number().min(0).max(100),
           isActive: z.boolean(),
-        })
+        }).refine(
+          (data) => data.warnThresholdPct < data.criticalThresholdPct,
+          {
+            message: "Warning threshold must be lower than critical threshold",
+            path: ["warnThresholdPct"],
+          }
+        )
       )
       .mutation(async ({ input, ctx }) => {
         return await db.upsertThreshold({

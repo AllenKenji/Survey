@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import CBMSAlertPanel from "@/components/CBMSAlertPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CBMSThresholdConfig from "@/components/CBMSThresholdConfig";
@@ -29,6 +29,22 @@ import {
   BarChart3,
   MapPin,
 } from "lucide-react";
+
+const VALID_TABS = new Set([
+  "live",
+  "overview",
+  "demography",
+  "health",
+  "housing",
+  "water",
+  "education",
+  "income",
+  "peace",
+  "other",
+  "citywide",
+  "alerts",
+  "thresholds",
+]);
 
 // ── Static city-wide context (reference data, not survey-computed) ─────────────
 const BARANGAY_POPULATION = [
@@ -89,8 +105,24 @@ export default function CBMSData() {
   const [activeTab, setActiveTab] = useState("live");
   const [selectedBarangay, setSelectedBarangay] = useState<string>("all");
 
-  const { data: liveData, isLoading: liveLoading, refetch: refetchLive } =
+  const { data: liveData, isLoading: liveLoading, isError: liveError, error: liveErrorData, refetch: refetchLive } =
     trpc.cbms.indicators.useQuery(undefined, { refetchInterval: 60_000 });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const tabFromUrl = new URLSearchParams(window.location.search).get("tab");
+    if (tabFromUrl && VALID_TABS.has(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, []);
+
+  const handleTabChange = (nextTab: string) => {
+    setActiveTab(nextTab);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", nextTab);
+    window.history.replaceState({}, "", url.toString());
+  };
 
   const total = liveData?.totalApprovedHouseholds ?? 0;
   const totalMembers = liveData?.totalMembers ?? 0;
@@ -197,6 +229,20 @@ export default function CBMSData() {
         </div>
       </div>
 
+      {liveError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold text-red-700">Unable To Load Live CBMS Data</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between gap-3">
+            <p className="text-xs text-red-700/90">{liveErrorData?.message || "Please retry."}</p>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => refetchLive()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Top Summary Cards — filtered by selected barangay */}
       {selectedBarangay !== "all" && (
         <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
@@ -237,7 +283,7 @@ export default function CBMSData() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="flex flex-wrap h-auto gap-1 bg-gray-100 p-1">
           <TabsTrigger value="live" className="text-xs font-semibold text-green-700">📊 Live vs. Baseline</TabsTrigger>
           <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
