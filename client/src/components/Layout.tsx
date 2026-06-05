@@ -11,10 +11,7 @@ import {
   Bell,
   ShieldCheck,
   TrendingUp,
-  Database,
-  CalendarDays,
-  FolderKanban,
-  UserSquare2
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -68,24 +65,6 @@ export default function Layout({ children, role = "admin", userName = "User", us
       title: "CBMS Data",
       href: "/cbms",
       icon: Database,
-      roles: ["admin", "supervisor"],
-    },
-    {
-      title: "SK Projects",
-      href: "/sk/projects",
-      icon: FolderKanban,
-      roles: ["admin", "supervisor", "surveyor"],
-    },
-    {
-      title: "SK Programs",
-      href: "/sk/programs",
-      icon: CalendarDays,
-      roles: ["admin", "supervisor", "surveyor"],
-    },
-    {
-      title: "SK Officials",
-      href: "/sk/officials",
-      icon: UserSquare2,
       roles: ["admin", "supervisor"],
     },
     {

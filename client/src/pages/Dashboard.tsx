@@ -16,24 +16,6 @@ import StatusOverviewWidget from "@/components/StatusOverviewWidget";
 import CBMSWidget from "@/components/CBMSWidget";
 import CBMSAlertPanel from "@/components/CBMSAlertPanel";
 
-const skNavigationCards = [
-  {
-    title: "SK Projects",
-    description: "Track project pipelines, ownership, and completion status.",
-    path: "/sk/projects",
-  },
-  {
-    title: "SK Programs",
-    description: "View upcoming youth programs, schedules, and focal teams.",
-    path: "/sk/programs",
-  },
-  {
-    title: "SK Officials",
-    description: "Review committee leads and designated responsibilities.",
-    path: "/sk/officials",
-  },
-];
-
 // Mock data for Parañaque barangays
 const locationData: Record<string, any> = {
   "Baclaran": {
@@ -295,7 +277,7 @@ export default function Dashboard() {
   const handleExportReport = () => {
     const summaryHeaders = ["Metric", "Value", "Change"];
     const summaryRows = summaryStats.map(d => [d.title, d.value, d.change]);
-    exportToPDF(`SK ${selectedLocation || "Parañaque"} Report`, summaryHeaders, summaryRows, "report");
+    exportToPDF(`${selectedLocation || "Parañaque"} Survey Report`, summaryHeaders, summaryRows, "report");
     toast.success("Report downloaded");
   };
 
@@ -327,10 +309,10 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            {selectedLocation ? `SK ${selectedLocation} Dashboard` : "SK Dashboard Overview"}
+            {selectedLocation ? `${selectedLocation} Dashboard` : "Survey Dashboard Overview"}
           </h2>
           <p className="text-muted-foreground mt-1">
-            Real-time youth governance insights for Sangguniang Kabataan operations.
+            Real-time community survey insights and operations overview.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -350,29 +332,6 @@ export default function Dashboard() {
             <span>Data updated: Just now</span>
           </div>
         </div>
-      </div>
-
-      {/* SK Navigation */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {skNavigationCards.map((item) => (
-          <Card key={item.path} className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-base">{item.title}</CardTitle>
-              <CardDescription>{item.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLocation(item.path)}
-                className="w-full justify-between"
-              >
-                Open {item.title}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
       </div>
 
       {/* Status Overview Widget */}
