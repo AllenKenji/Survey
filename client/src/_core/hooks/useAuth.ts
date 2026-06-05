@@ -180,6 +180,16 @@ export function useAuth(options?: UseAuthOptions) {
   ]);
 
   useEffect(() => {
+    if (!forceLoggedOut) return;
+    if (!meQuery.data) return;
+
+    setForceLoggedOut(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(FORCE_LOGGED_OUT_KEY);
+    }
+  }, [forceLoggedOut, meQuery.data]);
+
+  useEffect(() => {
     if (forceLoggedOut) return;
     if (!state.user) return;
 
