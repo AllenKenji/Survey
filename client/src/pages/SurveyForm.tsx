@@ -847,7 +847,7 @@ export default function SurveyForm() {
           )}
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Family Survey Questionnaire</h2>
-        <p className="text-muted-foreground">Cagayano Family Development Program (CFDP) — "No Family Left Behind"</p>
+        <p className="text-muted-foreground">Parañaque Family Development Program (CFDP) — "No Family Left Behind"</p>
       </div>
 
       {/* Progress Steps */}

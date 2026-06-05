@@ -34,9 +34,9 @@ const skNavigationCards = [
   },
 ];
 
-// Mock data for different locations
+// Mock data for Parañaque barangays
 const locationData: Record<string, any> = {
-  "Tuguegarao City": {
+  "Baclaran": {
     households: "12,450", population: "58,200", beneficiaries: "3,200", pending: "145",
     povertyIncidence: "Low", beneficiariesCount: 3200,
     income: [
@@ -50,7 +50,7 @@ const locationData: Record<string, any> = {
       { name: "Education", value: 10, color: "var(--chart-4)" }
     ]
   },
-  "Solana": {
+  "BF Homes": {
     households: "4,200", population: "18,500", beneficiaries: "1,800", pending: "45",
     povertyIncidence: "High", beneficiariesCount: 1800,
     income: [
@@ -64,7 +64,7 @@ const locationData: Record<string, any> = {
       { name: "Education", value: 5, color: "var(--chart-4)" }
     ]
   },
-  "Peñablanca": {
+  "Don Bosco": {
     households: "3,800", population: "16,200", beneficiaries: "1,500", pending: "32",
     povertyIncidence: "Medium", beneficiariesCount: 1500,
     income: [
@@ -78,7 +78,7 @@ const locationData: Record<string, any> = {
       { name: "Education", value: 5, color: "var(--chart-4)" }
     ]
   },
-  "Iguig": {
+  "San Dionisio": {
     households: "2,500", population: "11,000", beneficiaries: "900", pending: "20",
     povertyIncidence: "Medium", beneficiariesCount: 900,
     income: [
@@ -92,7 +92,7 @@ const locationData: Record<string, any> = {
       { name: "Education", value: 5, color: "var(--chart-4)" }
     ]
   },
-  "Enrile": {
+  "Moonwalk": {
     households: "3,100", population: "14,500", beneficiaries: "1,200", pending: "28",
     povertyIncidence: "High", beneficiariesCount: 1200,
     income: [
@@ -108,7 +108,7 @@ const locationData: Record<string, any> = {
   }
 };
 
-const defaultData = locationData["Tuguegarao City"];
+const defaultData = locationData["Baclaran"];
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -139,11 +139,11 @@ export default function Dashboard() {
     polygonsRef.current = [];
 
     const locations = [
-      { lat: 17.6132, lng: 121.7270, title: "Tuguegarao City" },
-      { lat: 17.6500, lng: 121.7000, title: "Solana" },
-      { lat: 17.5800, lng: 121.7500, title: "Peñablanca" },
-      { lat: 17.6300, lng: 121.7800, title: "Iguig" },
-      { lat: 17.5500, lng: 121.6800, title: "Enrile" },
+      { lat: 14.5311, lng: 120.9985, title: "Baclaran" },
+      { lat: 14.4545, lng: 121.0437, title: "BF Homes" },
+      { lat: 14.4840, lng: 121.0280, title: "Don Bosco" },
+      { lat: 14.4782, lng: 120.9946, title: "San Dionisio" },
+      { lat: 14.5015, lng: 121.0196, title: "Moonwalk" },
     ];
 
     // Approximate boundaries for demonstration (simple offsets from center)
@@ -295,7 +295,7 @@ export default function Dashboard() {
   const handleExportReport = () => {
     const summaryHeaders = ["Metric", "Value", "Change"];
     const summaryRows = summaryStats.map(d => [d.title, d.value, d.change]);
-    exportToPDF(`SK ${selectedLocation || "Province"} Report`, summaryHeaders, summaryRows, "report");
+    exportToPDF(`SK ${selectedLocation || "Parañaque"} Report`, summaryHeaders, summaryRows, "report");
     toast.success("Report downloaded");
   };
 
@@ -307,11 +307,11 @@ export default function Dashboard() {
     
     // Find coordinates for the location
     const locations = [
-      { lat: 17.6132, lng: 121.7270, title: "Tuguegarao City" },
-      { lat: 17.6500, lng: 121.7000, title: "Solana" },
-      { lat: 17.5800, lng: 121.7500, title: "Peñablanca" },
-      { lat: 17.6300, lng: 121.7800, title: "Iguig" },
-      { lat: 17.5500, lng: 121.6800, title: "Enrile" },
+      { lat: 14.5311, lng: 120.9985, title: "Baclaran" },
+      { lat: 14.4545, lng: 121.0437, title: "BF Homes" },
+      { lat: 14.4840, lng: 121.0280, title: "Don Bosco" },
+      { lat: 14.4782, lng: 120.9946, title: "San Dionisio" },
+      { lat: 14.5015, lng: 121.0196, title: "Moonwalk" },
     ];
     
     const coords = locations.find(l => l.title === location);
@@ -603,7 +603,7 @@ export default function Dashboard() {
                 <MapIcon className="h-5 w-5 text-primary" />
                 Geographic Distribution
               </CardTitle>
-              <CardDescription>Real-time survey locations across Cagayan Province.</CardDescription>
+              <CardDescription>Real-time survey locations across Parañaque City.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Popover open={openSearch} onOpenChange={setOpenSearch}>
@@ -660,10 +660,10 @@ export default function Dashboard() {
             className="w-full h-full"
             onMapReady={(map) => {
               mapRef.current = map;
-              // Center on Tuguegarao City, Cagayan
-              const center = { lat: 17.6132, lng: 121.7270 };
+              // Center on Parañaque City
+              const center = { lat: 14.4793, lng: 121.0198 };
               map.setCenter(center);
-              map.setZoom(11);
+              map.setZoom(12);
               
               // Initial render will be handled by useEffect
               setMapLayer("default"); 

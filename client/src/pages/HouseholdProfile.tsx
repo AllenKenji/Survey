@@ -13,12 +13,12 @@ const mockHousehold = {
   id: "HH-001",
   headName: "Juan Dela Cruz",
   respondentName: "Maria Dela Cruz",
-  address: "Purok 3, Centro, Tuguegarao City",
+  address: "Purok 3, Baclaran, Parañaque City",
   contactNumber: "0917-123-4567",
   interviewDate: "2025-01-15",
   interviewer: "Jane Doe",
   status: "Verified",
-  gps: "17.6132° N, 121.7270° E",
+  gps: "14.5311° N, 120.9985° E",
   
   members: [
     { name: "Juan Dela Cruz", relation: "Head", age: 45, sex: "Male", civil: "Married", educ: "High School Grad", job: "Farmer" },

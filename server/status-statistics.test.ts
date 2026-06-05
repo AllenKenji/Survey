@@ -39,7 +39,7 @@ describe("Status Statistics", () => {
       const household = await caller.households.create({
         barangay: "Test Barangay",
         municipality: "Test Municipality",
-        province: "Cagayan",
+        province: "Parañaque",
         headOfFamily: `Test Family ${status}`,
         age: 45,
         civilStatus: "Married",

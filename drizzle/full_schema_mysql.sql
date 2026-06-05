@@ -18,7 +18,7 @@ CREATE TABLE `households` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`barangay` varchar(255) NOT NULL,
 	`municipality` varchar(255) NOT NULL,
-	`province` varchar(255) NOT NULL DEFAULT 'Cagayan',
+	`province` varchar(255) NOT NULL DEFAULT 'Parañaque',
 	`headOfFamily` varchar(255) NOT NULL,
 	`age` int,
 	`civilStatus` varchar(100),

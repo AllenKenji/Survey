@@ -66,7 +66,7 @@ export const households = pgTable("households", {
   // Location information
   barangay: varchar("barangay", { length: 255 }).notNull(),
   municipality: varchar("municipality", { length: 255 }).notNull(),
-  province: varchar("province", { length: 255 }).default("Cagayan").notNull(),
+  province: varchar("province", { length: 255 }).default("Parañaque").notNull(),
   
   // Head of family information
   headOfFamily: varchar("headOfFamily", { length: 255 }).notNull(),

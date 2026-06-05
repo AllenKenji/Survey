@@ -91,7 +91,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Barangay A",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Test Family A",
       age: 35,
       monthlyIncome: "10000",
@@ -101,7 +101,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Barangay B",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Test Family B",
       age: 40,
       monthlyIncome: "15000",
@@ -125,7 +125,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Low Income Family",
       age: 30,
       monthlyIncome: "3000",
@@ -135,7 +135,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "High Income Family",
       age: 45,
       monthlyIncome: "50000",
@@ -160,7 +160,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Young Family",
       age: 25,
       monthlyIncome: "10000",
@@ -170,7 +170,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Senior Family",
       age: 65,
       monthlyIncome: "10000",
@@ -195,7 +195,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "4Ps Family",
       age: 35,
       monthlyIncome: "8000",
@@ -206,7 +206,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Non-4Ps Family",
       age: 40,
       monthlyIncome: "12000",
@@ -231,7 +231,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Approved Family",
       age: 35,
       monthlyIncome: "10000",
@@ -241,7 +241,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Submitted Family",
       age: 40,
       monthlyIncome: "12000",
@@ -265,7 +265,7 @@ describe("Custom Report Templates", () => {
     const household1 = await db.createHousehold({
       barangay: "Target Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Matching Family",
       age: 35,
       monthlyIncome: "10000",
@@ -276,7 +276,7 @@ describe("Custom Report Templates", () => {
     const household2 = await db.createHousehold({
       barangay: "Other Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Non-Matching Family",
       age: 35,
       monthlyIncome: "10000",

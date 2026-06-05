@@ -1521,7 +1521,7 @@ export default function CustomReportBuilder() {
                 <div className="prose prose-sm max-w-none">
                   <p>
                     This report contains {filteredData.length} household records collected from the 
-                    Cagayano Family Development Program. The data includes {selectedFields.length} fields 
+                    Parañaque Family Development Program. The data includes {selectedFields.length} fields 
                     covering household demographics, economic status, and program enrollment information.
                   </p>
                   {filteredData.length > 0 && (

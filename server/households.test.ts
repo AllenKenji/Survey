@@ -50,7 +50,7 @@ describe("households API", () => {
     const result = await caller.households.create({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Juan Dela Cruz",
       age: 45,
       civilStatus: "Married",
@@ -112,7 +112,7 @@ describe("households API", () => {
     await caller.households.create({
       barangay: "Search Test",
       municipality: "Test City",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Maria Santos",
       age: 35,
       occupation: "Teacher",
@@ -147,7 +147,7 @@ describe("surveys API", () => {
     const household = await caller.households.create({
       barangay: "Survey Test",
       municipality: "Test City",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Pedro Reyes",
     });
 
@@ -171,7 +171,7 @@ describe("surveys API", () => {
     const household = await caller.households.create({
       barangay: "Retrieve Test",
       municipality: "Test City",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Ana Garcia",
     });
 

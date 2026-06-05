@@ -33,7 +33,7 @@ const householdDataMock = [
     beneficiary4Ps: "Yes",
     otherPrograms: "TUPAD",
     barangay: "Centro",
-    municipality: "Tuguegarao City"
+    municipality: "Parañaque"
   },
   {
     id: "HH-002",
@@ -49,7 +49,7 @@ const householdDataMock = [
     beneficiary4Ps: "No",
     otherPrograms: "None",
     barangay: "Carig",
-    municipality: "Tuguegarao City"
+    municipality: "Parañaque"
   },
   {
     id: "HH-003",
@@ -65,7 +65,7 @@ const householdDataMock = [
     beneficiary4Ps: "Yes",
     otherPrograms: "Social Pension",
     barangay: "Ugac",
-    municipality: "Tuguegarao City"
+    municipality: "Parañaque"
   },
   {
     id: "HH-004",
@@ -81,7 +81,7 @@ const householdDataMock = [
     beneficiary4Ps: "No",
     otherPrograms: "None",
     barangay: "Centro",
-    municipality: "Solana"
+    municipality: "Parañaque"
   },
   {
     id: "HH-005",
@@ -97,7 +97,7 @@ const householdDataMock = [
     beneficiary4Ps: "Yes",
     otherPrograms: "AICS",
     barangay: "Buntun",
-    municipality: "Tuguegarao City"
+    municipality: "Parañaque"
   },
   // Add more mock data as needed
 ];

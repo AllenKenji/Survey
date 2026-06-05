@@ -30,7 +30,7 @@ describe("Status Workflow", () => {
     const household = await caller.households.create({
       barangay: "Test Barangay",
       municipality: "Test Municipality",
-      province: "Cagayan",
+      province: "Parañaque",
       headOfFamily: "Test Family Head",
       age: 45,
       civilStatus: "Married",

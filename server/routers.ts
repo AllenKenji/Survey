@@ -471,7 +471,7 @@ export const appRouter = router({
         z.object({
           barangay: z.string(),
           municipality: z.string(),
-          province: z.string().default("Cagayan"),
+          province: z.string().default("Parañaque"),
           headOfFamily: z.string(),
           age: z.number().optional(),
           civilStatus: z.string().optional(),
