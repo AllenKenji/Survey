@@ -107,6 +107,7 @@ export default function CBMSData() {
 
   const { data: liveData, isLoading: liveLoading, isError: liveError, error: liveErrorData, refetch: refetchLive } =
     trpc.cbms.indicators.useQuery(undefined, { refetchInterval: 60_000 });
+  const { data: bisBarangayList } = trpc.households.barangayList.useQuery();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -127,10 +128,21 @@ export default function CBMSData() {
   const total = liveData?.totalApprovedHouseholds ?? 0;
   const totalMembers = liveData?.totalMembers ?? 0;
 
-  // Derived: barangay list for the shared filter dropdown (from barangayBreakdowns)
+  // Derived: barangay list for the shared filter dropdown.
+  // Primary source: BIS-linked barangay master list from households.
+  // Fallback source: live CBMS breakdowns.
   const barangayOptions = useMemo(() => {
-    return (liveData?.barangayBreakdowns ?? []).map(d => d.barangay).sort();
-  }, [liveData]);
+    const fromBis = (bisBarangayList ?? []).filter(Boolean);
+    const fromLive = (liveData?.barangayBreakdowns ?? []).map(d => d.barangay).filter(Boolean);
+    return Array.from(new Set([...fromBis, ...fromLive])).sort((a, b) => a.localeCompare(b));
+  }, [bisBarangayList, liveData]);
+
+  useEffect(() => {
+    if (selectedBarangay === "all") return;
+    if (!barangayOptions.includes(selectedBarangay)) {
+      setSelectedBarangay("all");
+    }
+  }, [barangayOptions, selectedBarangay]);
 
   // Derived: the selected barangay's breakdown entry (or null if "all")
   const selectedBrgyData = useMemo(() => {
@@ -193,7 +205,7 @@ export default function CBMSData() {
             <h1 className="text-2xl font-bold text-gray-900">CBMS 13+1 Core Indicators</h1>
           </div>
           <p className="text-gray-500 text-sm">
-            Barangay Magsaysay · City of San Pedro · Live from approved survey data
+            Barangay filter is synchronized with BIS-linked barangay records and combined with approved CBMS survey data.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
