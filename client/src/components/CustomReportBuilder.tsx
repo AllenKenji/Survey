@@ -592,6 +592,9 @@ export default function CustomReportBuilder() {
                 />
                 {searchQuery && (
                   <button
+                    type="button"
+                    aria-label="Clear field search"
+                    title="Clear search"
                     onClick={() => {
                       if (searchQuery.trim()) {
                         saveToRecentSearches(searchQuery);
@@ -614,6 +617,7 @@ export default function CustomReportBuilder() {
                       
                       return (
                         <button
+                          type="button"
                           key={field.id}
                           onClick={() => selectFieldFromSuggestion(field)}
                           className={`w-full px-3 py-2 text-left hover:bg-accent flex items-center justify-between gap-2 ${
@@ -653,6 +657,9 @@ export default function CustomReportBuilder() {
                         {query}
                       </span>
                       <button
+                        type="button"
+                        aria-label={`Remove recent search ${query}`}
+                        title={`Remove ${query} from recent searches`}
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFromRecentSearches(query);
@@ -1004,6 +1011,7 @@ export default function CustomReportBuilder() {
               <div>
                 <div className="grid grid-cols-3 gap-2">
                   <button
+                    type="button"
                     onClick={() => setExportLayout('executive')}
                     className={`p-3 border rounded-lg text-left transition-all ${
                       exportLayout === 'executive'
@@ -1015,6 +1023,7 @@ export default function CustomReportBuilder() {
                     <div className="text-xs text-muted-foreground mt-1">Charts & metrics</div>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setExportLayout('detailed')}
                     className={`p-3 border rounded-lg text-left transition-all ${
                       exportLayout === 'detailed'
@@ -1026,6 +1035,7 @@ export default function CustomReportBuilder() {
                     <div className="text-xs text-muted-foreground mt-1">Complete table</div>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setExportLayout('field')}
                     className={`p-3 border rounded-lg text-left transition-all ${
                       exportLayout === 'field'
